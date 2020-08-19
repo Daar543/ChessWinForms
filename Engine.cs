@@ -1351,9 +1351,9 @@
             sw.Reset();
             return moves;
         }
-        static readonly char[] pieces = new char[12] { 'K', 'P', 'N', 'B', 'R', 'Q', 'k', 'p', 'n', 'b', 'r', 'q' };
+        public static readonly char[] pieces = new char[12] { 'K', 'P', 'N', 'B', 'R', 'Q', 'k', 'p', 'n', 'b', 'r', 'q' };
 
-        static bool Bit(ulong bitboard, int Pos)
+        public static bool Bit(ulong bitboard, int Pos)
         {
             ulong x = ((ulong)1 << Pos);
             ulong f = bitboard & x;
@@ -1454,7 +1454,12 @@
             Printout(Block | ((ulong)(1) << idx));
             Printout(Block | movs);
         }*/
-        static ulong[] BitBoards;
+        public static ulong[] BitBoards { get; set; }
+        public ulong[] GetBitBoards()
+        {
+            return BitBoards;
+        }
+        //public static ulong[] BitBoards = new ulong[12];
         static ulong[] CreateBBoards(char[] board)
         { //creates the basic bitboards
             ulong[] Bitboards = new ulong[12];
@@ -2360,17 +2365,21 @@
             {
                 next.flag = 1;
             }
-            TranspoTable[currdepth].Add((uint)next.zobrist, next);
+            if (!TranspoTable[currdepth].ContainsKey((uint)(next.zobrist)))
+            {
+                TranspoTable[currdepth].Add((uint)next.zobrist, next);
+            }
+            
 
             return alpha;
         }
 
-        private static bool Bit(int position, int j)
+        public static bool Bit(int position, int j)
         {
             return (((position) & (1 << j)) != 0);
         }
 
-        static bool SqColor(int index) //false light true dark
+        public static bool SqColor(int index) //false light true dark
         {
             ulong dark = (0xAA55AA55AA55AA55);
             return (((dark >> index) & 1) != 0);
@@ -3015,8 +3024,187 @@
                 }
 
                 player ^= true;
+                //end of infinite loop
 
             }
+        }
+
+
+
+        public string OneMover(bool white,uint mov, int totmoves,int depth_base, string nota )
+        {
+
+            CurrentHash = HashPosition(HashSeed);
+            int deph = depth_base;
+            TranspoTable = new Dictionary<uint, Hashentry>[depth_base + 4];
+
+            for (int k = 0; k < TranspoTable.Length; ++k)
+            {
+                TranspoTable[k] = new Dictionary<uint, Hashentry>();
+            }
+
+            uint[] mvm;
+            bool end;
+            bool player = white;
+
+            int evwhite = LazyEvaluation(true);
+            int evblack = LazyEvaluation(false);
+            ulong f = 0;
+            for (int m = 2; m < 12; ++m)
+            {
+                if (m == 6 || m == 7)
+                    continue;
+                f |= BitBoards[m];
+            }
+            if (f == 0)
+            {
+                deph = depth_base + 4;
+            }
+            else if (evwhite + evblack < 1200)
+            {
+                deph = depth_base + 2;
+            }
+            else if (evwhite + evblack < 2500)
+            {
+                deph = depth_base + 1;
+            }
+            else
+            {
+                deph = depth_base;
+            }
+
+            var swplay = new Stopwatch();
+
+            NodesSearched = 0;
+            TimeSpent = 0;
+
+            int ab = 0;
+            LINE principalVariation = new LINE(deph + (player ? 0 : -1));
+            for (int k = 0; k < TranspoTable.Length; ++k)
+            {
+                TranspoTable[k] = new Dictionary<uint, Hashentry>();
+            }
+            if (player || !player)
+            {
+                NodesSearched = 0;
+                swplay.Start();
+
+                // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, false); //no random
+                ab = AlphaBeta_Rewritten(0, deph + (player ? 0 : -1), int.MinValue + 10, int.MaxValue - 10, player, principalVariation, true); //both random
+                                                                                                                                                // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? true : false); //white random
+                                                                                                                                                // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? false : true); //black random
+
+                //ab = AlphaBeta_Rewritten(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, false);
+
+                swplay.Stop();
+                TimeSpent = swplay.ElapsedMilliseconds;
+                swplay.Reset();
+
+
+                end = true;
+                for (int i = 0; i < 1; ++i)
+                {
+                    mov = principalVariation.argmove[0];
+                }
+                if (mov == 0)
+                {
+                    end = true;
+                    EndMate(player);
+                    return nota;
+                }
+
+                /*Console.WriteLine("{0:X}", CurrentHash);
+                mvm = MakeMove(mov, player);
+                Console.WriteLine("{0:X}", CurrentHash);
+                UndoMove(mvm, player);
+                Console.WriteLine("{0:X}", CurrentHash);
+                mvm = MakeMove(mov, player);
+                Console.WriteLine("{0:X}", CurrentHash);*/
+                mvm = MakeMove(mov, player);
+                if (Attacked(player ? Wking : Bking, Wmask, Bmask, Block, !player, BitBoards))
+                {
+                    UndoMove(mvm, player);
+                    end = true;
+                }
+                else
+                {
+                    end = false;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Tah");
+                string am = Console.ReadLine();
+                int from = am[0] - 'a' + 8 * (8 - (am[1] - 48));
+                int to = am[2] - 'a' + 8 * (8 - (am[3] - 48));
+                int piece = 0;
+                for (int n = 0; n < 12; ++n)
+                {
+                    if (Bit(BitBoards[n], from))
+                    {
+                        piece = n;
+                        break;
+                    }
+
+
+                }
+
+                if (player)
+                {
+                    mov = BuildMoveWhite(piece, from, to);
+                }
+                else
+                {
+                    mov = BuildMoveBlack(piece, from, to);
+                }
+                mvm = MakeMove(mov, player);
+                if (Attacked(player ? Wking : Bking, Wmask, Bmask, Block, !player, BitBoards))
+                {
+                    UndoMove(mvm, player);
+                    Console.WriteLine("Error: Illegal Move");
+                    Console.WriteLine(DecodeMove((int)mov));
+                    end = true;
+
+                }
+                else
+                {
+                    end = false;
+                }
+            }
+            if (end)
+            {
+                EndMate(player);
+                return nota;
+            }
+
+            nota += DecodeMove((int)mov) + " ";
+            nota += "{" + Evaluation().ToString() + "} ";
+
+            var swr = new StreamWriter("partie.txt", false);
+            swr.Write(nota);
+            swr.Close();
+
+            if (InsufMaterial())
+            {
+                EndDraw();
+                return nota;
+            }
+            if (!player)
+            {
+                totmoves += 1;
+            }
+                
+            if (totmoves >= 300)
+            { //to prevent long games since im a pepeg and have not implemented transpos table for repetitions yet
+                EndDraw();
+                return nota;
+            }
+
+                
+
+            player ^= true;
+            //end of infinite loop
+            return nota;
         }
 
         public struct LINE
@@ -3308,10 +3496,7 @@
 
             return alpha;
         }
-
-        static void Start()
-        {
-            string[] databaze = new string[]
+        static string[] databaze = new string[]
             {
             "r1bqkbnr/pppp1ppp/2n5/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R/ KQkq b --", //skotska
             "3r3r/5pk1/3Rp1p1/p3p1P1/1p2P3/6Q1/PPP1qP2/1K2N1R1/ ---- b --", //taktika - cerny
@@ -3328,9 +3513,61 @@
             "4Q3/2b3pk/P6p/7P/4p3/8/5P1q/5RK1/ ---- w --", //mat nebo pat
             "KR6/8/5k2/7p/8/8/8/8/ ---- w --", //vez proti pesci (musis zabranit opakovani)
             };
+        public ulong[] Initialize(int idvychozi)
+        {
             for (int j = 0; j < 1; ++j)
             {
-                Console.WriteLine("Vyber si pozici");
+                string pozice = databaze[idvychozi];
+                //byte rosad = rosady[pz - 1];
+                char[] ka = TightFenToChar(FenToStr(pozice));
+                bool zacina = !((Position & (1 << 4)) == 0);
+                Wmask = 0;
+                Bmask = 0;
+                BitBoards = CreateBBoards(ka);
+                int[] AllPieces = CreatePieces(ka);
+                for (int i = 0; i < 64; ++i)
+                {
+                    if (ka[i] != '\0')
+                    {
+                        switch (ka[i])
+                        {
+                            case 'p':
+                            case 'k':
+                            case 'n':
+                            case 'b':
+                            case 'r':
+                            case 'q':
+                                Bmask |= (((ulong)(1)) << i);
+                                break;
+                            case 'P':
+                            case 'K':
+                            case 'N':
+                            case 'B':
+                            case 'R':
+                            case 'Q':
+                                Wmask |= (((ulong)(1)) << i);
+                                break;
+                        }
+                    }
+                }
+                Remask();
+                //Block = Wmask | Bmask;
+
+                //Printout(BitBoards);
+                ulong h = HashPosition(HashSeed);
+                //Console.WriteLine("{0:X}", h);
+                //Play(zacina);
+                //return;
+
+            }
+            return BitBoards;
+        }
+        public static void Start()
+        {
+            
+            for (int j = 0; j < 1; ++j)
+            {
+                //Console.WriteLine("Vyber si pozici");
                 int pozid = int.Parse(Console.ReadLine());
                 //int pozid = j;
                 string pozice = databaze[pozid];
@@ -3369,7 +3606,7 @@
                 Remask();
                 //Block = Wmask | Bmask;
 
-                Printout(BitBoards);
+                //Printout(BitBoards);
                 List<uint> mvsh;
 
                 /*mvsh= MoveGeneration_White(BitBoards);
@@ -3419,7 +3656,7 @@
                 }*/
 
                 ulong h = HashPosition(HashSeed);
-                Console.WriteLine("{0:X}", h);
+                //Console.WriteLine("{0:X}", h);
                 Play(zacina);
                 //return;
 

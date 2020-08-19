@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -14,12 +15,98 @@ namespace Sachy_Obrazky
     {
         public Form1()
         {
+            Engine enj = new Engine();
+            ulong[] BB = enj.Initialize(3);
             InitializeComponent();
+            MakeBoard();
+            PrintPic(BB);
+            PlayGame(enj);
+            
         }
-
-        private void button8_Click(object sender, EventArgs e)
+        public Button[] ButtonBoard = new Button[8 * 8];
+        private void MakeBoard()
         {
+            //creates buttons
+            int size = panel1.Width / 8;
+            panel1.Height = panel1.Width + 100;
+
+            //print buttons
+            for (int i = 0; i < 64; i++)
+            {
+                ButtonBoard[i] = new Button();
+                ButtonBoard[i].Height = size;
+                ButtonBoard[i].Width = size;
+
+                panel1.Controls.Add(ButtonBoard[i]);
+
+                //sets location 
+                ButtonBoard[i].Location = new Point((i & 0b111) * size, (i >> 3) * size);
+
+                //tag is according to index
+                ButtonBoard[i].Tag = i;
+
+                //text is determined by the normal notation rule
+                ButtonBoard[i].Text = ((char)((i&0b111) + 'a')).ToString() + ((8-(i >> 3)).ToString());
+            }
 
         }
+        public void PlayGame(Engine enj)
+        {
+            string notation = "";
+            int moos = 0;
+            bool white = true;
+            ulong[] bbs;
+            while (true)
+            {
+                notation = enj.OneMover(true, (uint)moos, moos, 4, notation);
+                moos += 1;
+                white ^= true;
+                bbs = enj.GetBitBoards();
+                PrintPic(bbs);
+                InitializeComponent();
+                Thread.Sleep(2000);
+            }
+            
+        }
+        public void PrintPic(ulong[] bitboards)
+        { //same as the Printout in engine function, but changes the names of buttons
+            int n = -1;
+            foreach(Button btn in ButtonBoard) //hope they are ordered in the same way
+            {
+                ++n;
+                char piece = ' ';
+                //if occupied, write something here...
+                for (int k = 0; k < bitboards.Length; k++)
+                {
+                    if (Engine.Bit(bitboards[k], n))
+                    {
+                        piece = Engine.pieces[k];
+                        ButtonBoard[n].Text = piece.ToString();
+                        break;
+                    }
+                    ButtonBoard[n].Text = "";
+                }
+            }
+            /*
+            for (int i = 0; i < 8; i++) //i is for rows, j is for columns
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    char piece = ' ';
+                    //if occupied, write something here...
+                    for (int k = 0; k < bitboards.Length; k++)
+                    {
+                        if (Engine.Bit(bitboards[k], 8 * i + j))
+                        {
+                            piece = Engine.pieces[k];
+
+                            break;
+                        }
+                    }
+                }
+            }
+            */
+        }
+        
     }
 }

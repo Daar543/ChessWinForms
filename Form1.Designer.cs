@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
@@ -93,6 +94,7 @@
             this.button63 = new System.Windows.Forms.Button();
             this.button64 = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // button1
@@ -286,12 +288,13 @@
             // 
             // button22
             // 
+            this.button22.BackColor = System.Drawing.SystemColors.Control;
             this.button22.Location = new System.Drawing.Point(296, 329);
             this.button22.Name = "button22";
             this.button22.Size = new System.Drawing.Size(50, 50);
             this.button22.TabIndex = 21;
             this.button22.Text = "button22";
-            this.button22.UseVisualStyleBackColor = true;
+            this.button22.UseVisualStyleBackColor = false;
             // 
             // button23
             // 
@@ -678,6 +681,12 @@
             this.panel1.Size = new System.Drawing.Size(358, 442);
             this.panel1.TabIndex = 64;
             // 
+            // timer1
+            // 
+            this.timer1.Enabled = true;
+            this.timer1.Interval = 10;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -821,6 +830,7 @@
         private System.Windows.Forms.Button button63;
         private System.Windows.Forms.Button button64;
         private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Timer timer1;
     }
 }
 

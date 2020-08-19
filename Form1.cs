@@ -15,7 +15,7 @@ namespace Sachy_Obrazky
     {
         public Form1()
         {
-            Engine enj = new Engine();
+            enj = new Engine();
             ulong[] BB = enj.Initialize(3);
             InitializeComponent();
             MakeBoard();
@@ -23,6 +23,7 @@ namespace Sachy_Obrazky
             PlayGame(enj);
             
         }
+        Engine enj;
         public Button[] ButtonBoard = new Button[8 * 8];
         private void MakeBoard()
         {
@@ -50,23 +51,39 @@ namespace Sachy_Obrazky
             }
 
         }
+        static readonly Color[] PieceColors = new Color[]
+        {
+            Color.White, //king
+            Color.Yellow,
+            Color.LightGreen,
+            Color.LightBlue,
+            Color.Orange, //rook
+            Color.Pink,
+
+            Color.Black,
+            Color.Magenta, //pawn
+            Color.DarkGreen,
+            Color.DarkBlue,
+            Color.DarkRed,
+            Color.Purple, //queen
+        };
+
+
+        string notation;
+        int gamelength;
+        bool white = true;
+        ulong[] bitbs;
+
         public void PlayGame(Engine enj)
         {
-            string notation = "";
-            int moos = 0;
-            bool white = true;
-            ulong[] bbs;
-            while (true)
-            {
-                notation = enj.OneMover(true, (uint)moos, moos, 4, notation);
-                moos += 1;
-                white ^= true;
-                bbs = enj.GetBitBoards();
-                PrintPic(bbs);
-                InitializeComponent();
-                Thread.Sleep(2000);
-            }
-            
+            notation = "";
+            gamelength = 0;
+            notation = enj.OneMover(white, (uint)gamelength,gamelength, 4, notation);
+            gamelength += 1;
+            white ^= true;
+            bitbs = enj.GetBitBoards();
+            PrintPic(bitbs);
+            Thread.Sleep(2000);
         }
         public void PrintPic(ulong[] bitboards)
         { //same as the Printout in engine function, but changes the names of buttons
@@ -78,13 +95,16 @@ namespace Sachy_Obrazky
                 //if occupied, write something here...
                 for (int k = 0; k < bitboards.Length; k++)
                 {
+                    ButtonBoard[n].Text = "";
                     if (Engine.Bit(bitboards[k], n))
                     {
                         piece = Engine.pieces[k];
-                        ButtonBoard[n].Text = piece.ToString();
+                        //ButtonBoard[n].Text = piece.ToString();
+                        ButtonBoard[n].BackColor = PieceColors[k];
                         break;
                     }
-                    ButtonBoard[n].Text = "";
+                    
+                    ButtonBoard[n].BackColor = SystemColors.Control;
                 }
             }
             /*
@@ -107,6 +127,10 @@ namespace Sachy_Obrazky
             }
             */
         }
-        
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            PlayGame(enj);
+        }
     }
 }

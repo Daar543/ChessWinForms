@@ -2216,6 +2216,14 @@
             LINE line = new LINE(maxdepth);
             Hashentry entry;
             bool end = true;
+            
+
+            if (currdepth > maxdepth) //or end...
+            {
+                return Quisce(alpha, beta, white, evaluation_system);
+                //return Evaluation();
+            }
+
             bool Intable = (TranspoTable[currdepth].TryGetValue((uint)(CurrentHash), out entry)); //checks the transpo table
             if (Intable && /*entry.depth == currdepth &&*/ entry.zobrist == CurrentHash) //check the whole hash, in case of collishns
             {
@@ -2267,13 +2275,11 @@
                     return entry.eval;
                 }
             }
-
             if (currdepth >= maxdepth) //or end...
             {
                 return Quisce(alpha, beta, white, evaluation_system);
                 //return Evaluation();
             }
-
             uint[] mvs = white ? MoveGeneration_White(BitBoards).ToArray() : MoveGeneration_Black(BitBoards).ToArray();
             Shuffle(mvs);
             SortMoves(mvs);

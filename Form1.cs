@@ -24,6 +24,7 @@ namespace Sachy_Obrazky
             
         }
         Engine enj;
+        bool moveMade = true;
         public Button[] ButtonBoard = new Button[8 * 8];
         private void MakeBoard()
         {
@@ -69,21 +70,20 @@ namespace Sachy_Obrazky
         };
 
 
-        string notation;
-        int gamelength;
+        string notation = "";
+        int gamelength = 0;
         bool white = true;
         ulong[] bitbs;
 
         public void PlayGame(Engine enj)
         {
-            notation = "";
-            gamelength = 0;
-            notation = enj.OneMover(white, (uint)gamelength,gamelength, 4, notation);
+            moveMade = false;
+            notation = enj.OneMover(white, (uint)gamelength,gamelength, 5, notation);
             gamelength += 1;
             white ^= true;
             bitbs = enj.GetBitBoards();
             PrintPic(bitbs);
-            Thread.Sleep(2000);
+            moveMade = true;
         }
         public void PrintPic(ulong[] bitboards)
         { //same as the Printout in engine function, but changes the names of buttons
@@ -128,8 +128,16 @@ namespace Sachy_Obrazky
             */
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+        private long lastTimeRan = System.DateTime.Now.Ticks;
+
+        private void timer1_Tick(object sender, EventArgs e) //tick time = 10
         {
+            //if the last time ran is less than 3 seconds ago, skip the timer tick.
+            if (moveMade is false || lastTimeRan > (System.DateTime.Now.Ticks - 20_000_000))
+            {
+                return;
+            }
+            lastTimeRan = System.DateTime.Now.Ticks;
             PlayGame(enj);
         }
     }

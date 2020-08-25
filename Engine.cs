@@ -1660,6 +1660,12 @@
             FixPositionHash();
 
             uint piece = (move >> 24) & ((1 << 4) - 1);
+            int blankmoves = (Position >> 24) & (0b00_111111); //bits 2-7 (MSB) signalize moves which do not progress
+            Position &= ~(0b00_111111 << 24); //nullifies the blank move count
+            if (piece == 1 || piece == 7)
+                blankmoves = 0;
+            else
+                blankmoves++; //if not nullified, the count increases by 1 (is nullified by pawn move or capture in general)
 
             if (move == emptymove) //secret code for empty move
             {
@@ -1668,6 +1674,8 @@
                 FixPositionHash();
                 return memo;
             }
+
+            
             if (Bit(move, 5) || Bit(move, 6)) //castling
             {
                 if (Bit(move, 5))//qside
@@ -1737,6 +1745,7 @@
                 }
                 Remask();
                 Position ^= (1 << 4); //flip side
+                Position |= (blankmoves << 24);
 
                 FixPositionHash();
                 return memo;
@@ -1775,6 +1784,7 @@
                 //detrigger en-passant
                 Position &= ~(0b111111 << 8);
                 Position ^= (1 << 4); //flips side
+                Position |= (blankmoves << 24);
 
                 FixPositionHash();
                 return memo;
@@ -1813,7 +1823,7 @@
 
             if ((move & 1 << 7) != 0)
             {
-
+                blankmoves = 0;
                 uint captur = (move >> 28);
                 BitBoards[captur] &= ~((ulong)1 << to);
                 XH((int)(captur * 64) + to);
@@ -1877,6 +1887,7 @@
 
             Remask();
             Position ^= (1 << 4); //flips side
+            Position |= (blankmoves << 24);
 
             FixPositionHash();
             return memo;
@@ -1884,6 +1895,7 @@
 
         static uint UndoMove(uint[] memo, bool white)
         {
+            //in this case, the "position" is not modified in any way - simply reloads the state from the return of MakeMove.
             uint move = memo[0];
             uint piece = (move >> 24) & ((1 << 4) - 1);
             FixPositionHash();
@@ -2203,7 +2215,7 @@
             { //if player has no legal moves, it's mate or stalemate
                 return -EndMateEval(white, 1 + currdepth);
             }
-            if (InsufMaterial())
+            if (InsufMaterial()||NoProgress())
             {
                 return 0;
             }
@@ -2308,9 +2320,19 @@
                 }
                 //following only when move is legal
                 end = false;
-                donemove = move;
 
-                int curreval = -AlphaBeta_Rewritten(currdepth + 1, maxdepth, -beta, -alpha, !white, line, evaluation_system);
+                donemove = move;
+                int curreval;
+
+                if (InsufMaterial()||NoProgress())
+                {
+                    curreval = 0;
+                }
+                else
+                {
+                    curreval = -AlphaBeta_Rewritten(currdepth + 1, maxdepth, -beta, -alpha, !white, line, evaluation_system);
+                }
+
                 UndoMove(mvm, white);
 
                 if (curreval > BestValue)
@@ -2349,10 +2371,7 @@
             { //if player has no legal moves, it's mate or stalemate
                 return -EndMateEval(white, 1 + currdepth);
             }
-            if (InsufMaterial())
-            {
-                return 0;
-            }
+            
 
             Hashentry next = new Hashentry(maxdepth);
             next.depth = currdepth;
@@ -2477,7 +2496,11 @@
                 items[j] = temp;
             }
         }
-
+        public static bool NoProgress()
+        {
+            //no progress: at least than 50 blank moves
+            return (((Position >> 24) & (0b00111111)) >= 50);
+        }
         public static bool InsufMaterial() // checks for draw by lack of material
         {
             //any pawns, rooks or queens? False
@@ -3367,11 +3390,21 @@
 
         static int Quisce(int alpha, int beta, bool white, bool evaluation_system) //,LINE pline)
         {
-            int staticEval =
+            int staticEval = 0;
+            if (InsufMaterial())
+            {
+                staticEval = 0;
+            }
+            else
+            {
+                staticEval =
                 evaluation_system ?
                 (Evaluation() + los.Next(-25, +26))
                 : Evaluation();
-            staticEval *= (white ? 1 : -1);
+
+                staticEval *= (white ? 1 : -1);
+            }
+            
             //if there is no good capture, consider the score of position good as it is
             if (staticEval >= beta)
                 return beta;
@@ -3494,11 +3527,6 @@
                     */
                 }
             }
-            if (InsufMaterial())
-            {
-                return 0;
-            }
-
 
             return alpha;
         }

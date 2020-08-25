@@ -52,6 +52,56 @@ namespace Sachy_Obrazky
             }
 
         }
+
+        /*protected override void OnPaintBackground(PaintEventArgs e)
+        {
+            //empty implementation
+        }*/
+
+        public static Image resizeImage(Image imgToResize, Size size)
+        {
+            return (Image)(new Bitmap(imgToResize, size));
+        }
+
+        
+        private void PrintPieceImage(Button b, string imgName, PaintEventArgs e)
+        { //prints an image of a piece on given button
+          // Assign an image to the button.
+
+            const double ScaleRatio = 1;
+            int width = (int) (b.Width* ScaleRatio);
+            int height = (int) (b.Height * ScaleRatio);
+
+            Image originImage = new Bitmap(Application.StartupPath + "\\Image\\" + imgName);
+            Image image = resizeImage(originImage, new Size(height, width));
+
+            // Make the destination rectangle 30 percent wider and
+            // 30 percent taller than the original image.
+            // Put the upper-left corner of the destination
+            // rectangle at (150, 20).
+            
+            RectangleF destinationRect = new RectangleF(
+                (b.Width - width) /2,
+                (b.Height - height) / 2,
+                1 * width,
+                1 * height);
+
+            // Draw a portion of the image. Scale that portion of the image
+            // so that it fills the destination rectangle.
+            RectangleF sourceRect = new RectangleF(0, 0, 1 * width, 1 * height);
+            e.Graphics.DrawImage(
+                image,
+                destinationRect,
+                sourceRect,
+                GraphicsUnit.Pixel);
+
+            /*b.Image = Image.FromFile(Application.StartupPath + "\\Image\\"+imgName);
+            // Align the image and text on the button.
+            b.ImageAlign = ContentAlignment.MiddleRight;
+            b.TextAlign = ContentAlignment.MiddleLeft;
+            // Give the button a flat appearance.
+            b.FlatStyle = FlatStyle.Flat;*/
+        }
         static readonly Color[] PieceColors = new Color[]
         {
             Color.White, //king
@@ -99,8 +149,17 @@ namespace Sachy_Obrazky
                     if (Engine.Bit(bitboards[k], n))
                     {
                         piece = Engine.pieces[k];
-                        //ButtonBoard[n].Text = piece.ToString();
-                        ButtonBoard[n].BackColor = PieceColors[k];
+                        ButtonBoard[n].Text = piece.ToString();
+                        //ButtonBoard[n].BackColor = PieceColors[k];
+                        if(k == 4)
+                        {
+                            ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(BBN_Paint);
+                            void BBN_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+                            {
+                                PrintPieceImage(ButtonBoard[n],"Wrook_light.png",e);
+                            }
+                            //PrintPieceImage(ButtonBoard[n], "Wrook_light.png");
+                        }
                         break;
                     }
                     

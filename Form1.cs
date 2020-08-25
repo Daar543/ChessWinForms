@@ -68,7 +68,7 @@ namespace Sachy_Obrazky
         { //prints an image of a piece on given button
           // Assign an image to the button.
 
-            const double ScaleRatio = 1;
+            const double ScaleRatio = 0.8;
             int width = (int) (b.Width* ScaleRatio);
             int height = (int) (b.Height * ScaleRatio);
 
@@ -81,7 +81,7 @@ namespace Sachy_Obrazky
             // rectangle at (150, 20).
             
             RectangleF destinationRect = new RectangleF(
-                (b.Width - width) /2,
+                (b.Width - width) / 2,
                 (b.Height - height) / 2,
                 1 * width,
                 1 * height);
@@ -135,6 +135,16 @@ namespace Sachy_Obrazky
             PrintPic(bitbs);
             moveMade = true;
         }
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams cp = base.CreateParams;
+                cp.ExStyle |= 0x02000000;
+                return cp;
+            }
+        }
         public void PrintPic(ulong[] bitboards)
         { //same as the Printout in engine function, but changes the names of buttons
             int n = -1;
@@ -143,7 +153,7 @@ namespace Sachy_Obrazky
                 ++n;
                 char piece = ' ';
                 //if occupied, write something here...
-                for (int k = 0; k < bitboards.Length; k++)
+                for ( int k = 0; k < bitboards.Length; ++k)
                 {
                     ButtonBoard[n].Text = "";
                     if (Engine.Bit(bitboards[k], n))
@@ -151,19 +161,117 @@ namespace Sachy_Obrazky
                         piece = Engine.pieces[k];
                         ButtonBoard[n].Text = piece.ToString();
                         //ButtonBoard[n].BackColor = PieceColors[k];
-                        if(k == 4)
+                        switch (k)
                         {
-                            ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(BBN_Paint);
-                            void BBN_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
-                            {
-                                PrintPieceImage(ButtonBoard[n],"Wrook_light.png",e);
-                            }
-                            //PrintPieceImage(ButtonBoard[n], "Wrook_light.png");
+                            case 0:
+                                ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Wking_Paint);
+                                void Wking_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+                                {
+                                    PrintPieceImage(ButtonBoard[n], "Wking_light.png", e);
+                                }
+                                break;
+                            case 1:
+                                ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Wpawn_Paint);
+                                void Wpawn_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+                                {
+                                    PrintPieceImage(ButtonBoard[n], "Wpawn_light.png", e);
+                                }
+                                break;
+                            case 2:
+                                ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Wknight_Paint);
+                                void Wknight_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+                                {
+                                    PrintPieceImage(ButtonBoard[n], "Wknight_light.png", e);
+                                }
+                                break;
+                            case 3:
+                                ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Wbishop_Paint);
+                                void Wbishop_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+                                {
+                                    PrintPieceImage(ButtonBoard[n], "Wbishop_light.png", e);
+                                }
+                                break;
+                            case 4:
+                                ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Wrook_Paint);
+                                void Wrook_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+                                {
+                                    PrintPieceImage(ButtonBoard[n], "Wrook_light.png", e);
+                                }
+                                break;
+                            case 5:
+                                ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Wqueen_Paint);
+                                void Wqueen_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+                                {
+                                    PrintPieceImage(ButtonBoard[n], "Wqueen_light.png", e);
+                                }
+                                break;
+                            case 6:
+                                ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Bking_Paint);
+                                void Bking_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+                                {
+                                    PrintPieceImage(ButtonBoard[n], "Bking_light.png", e);
+                                }
+                                break;
+                            case 7:
+                                ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Bpawn_Paint);
+                                void Bpawn_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+                                {
+                                    PrintPieceImage(ButtonBoard[n], "Bpawn_light.png", e);
+                                }
+                                break;
+                            case 8:
+                                ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Bknight_Paint);
+                                void Bknight_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+                                {
+                                    PrintPieceImage(ButtonBoard[n], "Bknight_light.png", e);
+                                }
+                                break;
+                            case 9:
+                                ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Bbishop_Paint);
+                                void Bbishop_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+                                {
+                                    PrintPieceImage(ButtonBoard[n], "Bbishop_light.png", e);
+                                }
+                                break;
+                            case 10:
+                                ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Brook_Paint);
+                                void Brook_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+                                {
+                                    PrintPieceImage(ButtonBoard[n], "Brook_light.png", e);
+                                }
+                                break;
+                            case 11:
+                                ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Bqueen_Paint);
+                                void Bqueen_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+                                {
+                                    PrintPieceImage(ButtonBoard[n], "Bqueen_light.png", e);
+                                }
+                                break;
                         }
                         break;
                     }
                     
                     ButtonBoard[n].BackColor = SystemColors.Control;
+                }
+                if (piece == ' ')
+                {
+                    //if there is no piece
+                    if (!Engine.SqColor(n)) //if light
+                    {
+                        ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Dark_Paint);
+                    }
+                    else
+                    {
+                        ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Light_Paint);
+                    }
+                    void Dark_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+                    {
+                            PrintPieceImage(ButtonBoard[n], "Empty_dark.png", e);
+                    }
+                    void Light_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+                    {
+                        PrintPieceImage(ButtonBoard[n], "Empty_light.png", e);
+                    }
                 }
             }
             /*

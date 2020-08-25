@@ -2404,10 +2404,10 @@
             return (((position) & (1 << j)) != 0);
         }
 
-        public static bool SqColor(int index) //false light true dark
+        public static bool SqColor(int index) //true light false dark
         {
             ulong dark = (0xAA55AA55AA55AA55);
-            return (((dark >> index) & 1) != 0);
+            return (Bit(dark, index));
         }
 
 

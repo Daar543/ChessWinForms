@@ -40,7 +40,7 @@ namespace Sachy_Obrazky
                 ButtonBoard[i] = new Button();
                 ButtonBoard[i].Height = size;
                 ButtonBoard[i].Width = size;
-
+                ButtonBoard[i].BackColor = Engine.SqColor(i) ? Color.White : Color.Brown;
                 panel1.Controls.Add(ButtonBoard[i]);
 
                 //sets location 
@@ -155,15 +155,17 @@ namespace Sachy_Obrazky
             int width = (int)(b.Width * ScaleRatio);
             int height = (int)(b.Height * ScaleRatio);
 
-            Image originImage = new Bitmap(Application.StartupPath + "\\Image\\" + PieceImages[piece]);
+            Bitmap originImage = new Bitmap(Application.StartupPath + "\\Image\\" + PieceImages[piece]);
+            originImage.MakeTransparent(Color.FromArgb(247,247,247));
             Image image = resizeImage(originImage, new Size(height, width));
+            
             b.Image = image;
 
 
-            b.ImageAlign = ContentAlignment.MiddleRight;
+            /*b.ImageAlign = ContentAlignment.MiddleRight;
             b.TextAlign = ContentAlignment.MiddleLeft;
             // Give the button a flat appearance.
-            b.FlatStyle = FlatStyle.Flat;
+            b.FlatStyle = FlatStyle.Flat;*/
         }
         public string[] PieceImages = new string[]
         {

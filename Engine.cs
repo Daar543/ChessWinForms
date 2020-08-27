@@ -203,7 +203,7 @@
         static int Bking;
         static ulong CurrentHash;
         public static Dictionary<uint, Hashentry>[] TranspoTable;
-
+        static string Notation;
 
         const int
             hash_side = 772,
@@ -3060,7 +3060,7 @@
 
 
 
-        public string OneMover(bool white,uint mov, int totmoves,int depth_base, string nota )
+        public bool OneMover(bool white,uint mov, int totmoves,int depth_base)
         {
 
             CurrentHash = HashPosition(HashSeed);
@@ -3108,7 +3108,7 @@
             TimeSpent = 0;
 
             int ab = 0;
-            LINE principalVariation = new LINE(deph + (player ? 0 : -1));
+            LINE principalVariation = new LINE(deph /*+ (player ? 0 : -1)*/);
             for (int k = 0; k < TranspoTable.Length; ++k)
             {
                 TranspoTable[k] = new Dictionary<uint, Hashentry>();
@@ -3119,7 +3119,7 @@
                 swplay.Start();
 
                 // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, false); //no random
-                ab = AlphaBeta_Rewritten(0, deph + (player ? 0 : -1), int.MinValue + 10, int.MaxValue - 10, player, principalVariation, true); //both random
+                ab = AlphaBeta_Rewritten(0, deph /*+ (player ? 0 : -1)*/, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, true); //both random
                                                                                                                                                 // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? true : false); //white random
                                                                                                                                                 // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? false : true); //black random
 
@@ -3139,7 +3139,7 @@
                 {
                     end = true;
                     EndMate(player);
-                    return nota;
+                    return false;
                 }
 
                 /*Console.WriteLine("{0:X}", CurrentHash);
@@ -3203,37 +3203,30 @@
             if (end)
             {
                 EndMate(player);
-                return nota;
+                return false;
             }
 
-            nota += DecodeMove((int)mov) + " ";
-            nota += "{" + Evaluation().ToString() + "} ";
+            Notation += DecodeMove((int)mov) + " ";
+            Notation += "{" + Evaluation().ToString() + "} ";
 
             var swr = new StreamWriter("partie.txt", false);
-            swr.Write(nota);
+            swr.Write(Notation);
             swr.Close();
 
-            if (InsufMaterial())
+            if (InsufMaterial()||NoProgress())
             {
                 EndDraw();
-                return nota;
+                return false;
             }
             if (!player)
             {
                 totmoves += 1;
             }
                 
-            if (totmoves >= 300)
-            { //to prevent long games since im a pepeg and have not implemented transpos table for repetitions yet
-                EndDraw();
-                return nota;
-            }
-
-                
 
             player ^= true;
             //end of infinite loop
-            return nota;
+            return true;
         }
 
         public struct LINE

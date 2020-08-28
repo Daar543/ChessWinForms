@@ -128,16 +128,18 @@ namespace Sachy_Obrazky
         ulong[] bitbs = new ulong[12];
         
 
-        public void PlayGame(Engine enj)
+        public bool PlayGame(Engine enj)
         {
             moveMade = false;
-            notation = enj.OneMover(white, (uint)gamelength,gamelength, 4, notation);
+            bool x = enj.OneMover(white, (uint)gamelength,gamelength, 4);
+            notation = enj.Notation;
             gamelength += 1;
             white ^= true;
             bitbs = enj.GetBitBoards();
             PrintPic(bitbs,true);
             temporaryBitBoards = bitbs;
             moveMade = true;
+            return x;
         }
 
         /*protected override CreateParams CreateParams
@@ -312,16 +314,8 @@ namespace Sachy_Obrazky
                     else
                     {
                         //ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Light_Paint);
-                        ButtonBoard[n].BackColor = Color.White;
+                        ButtonBoard[n].BackColor = Color.LightGray;
                         ButtonBoard[n].Image = null;
-                    }
-                    void Dark_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
-                    {
-                            PrintPieceImage(ButtonBoard[n], "Empty_dark.png", e);
-                    }
-                    void Light_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
-                    {
-                        PrintPieceImage(ButtonBoard[n], "Empty_light.png", e);
                     }
                 }
             }
@@ -345,18 +339,22 @@ namespace Sachy_Obrazky
             }
             */
         }
-
+        bool continuing = true;
         private long lastTimeRan = System.DateTime.Now.Ticks;
 
         private void timer1_Tick(object sender, EventArgs e) //tick time = 10
         {
             //if the last time ran is less than 3 seconds ago, skip the timer tick.
-            if (moveMade is false || lastTimeRan > (System.DateTime.Now.Ticks - 10_000_000))
+            if (moveMade is false /*|| lastTimeRan > (System.DateTime.Now.Ticks - 20_000_000)*/|| !continuing)
             {
                 return;
             }
             lastTimeRan = System.DateTime.Now.Ticks;
-            PlayGame(enj);
+            continuing = PlayGame(enj);
+            /*if (!continuing)
+            {
+                Finish()
+            }*/
         }
     }
 }

@@ -203,7 +203,7 @@
         static int Bking;
         static ulong CurrentHash;
         public static Dictionary<uint, Hashentry>[] TranspoTable;
-        static string Notation;
+        public string Notation { get; set; }
 
         const int
             hash_side = 772,

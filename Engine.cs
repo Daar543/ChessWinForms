@@ -198,7 +198,12 @@
         static ulong Wmask; //1 bit for every white piece on given square
         static ulong Bmask; //same, for black
         static ulong Block; //union
-        static int Position; // 1 repetition + blank moves, 2 moves, 3 moves+ep, 4 castling + color  
+        public static int Position; // 1 repetition + blank moves, 2 moves, 3 moves+ep, 4 castling + color  
+        public int GetPos()
+        {
+            return Position;
+        }
+            
         static int Wking;
         static int Bking;
         static ulong CurrentHash;
@@ -2125,6 +2130,8 @@
             public int ancient;
             public uint move;
             public uint[] pv;
+            public ulong WM;
+            public ulong BM;
 
             public Hashentry(ulong zobrist, int depth, int flag,
                              int eval, int ancient, uint move)
@@ -2228,16 +2235,16 @@
             LINE line = new LINE(maxdepth);
             Hashentry entry;
             bool end = true;
-            
 
-            if (currdepth > maxdepth) //or end...
+
+            if (currdepth >= maxdepth) //or end...
             {
                 return Quisce(alpha, beta, white, evaluation_system);
                 //return Evaluation();
             }
 
-            bool Intable = (TranspoTable[currdepth].TryGetValue((uint)(CurrentHash), out entry)); //checks the transpo table
-            if (Intable && /*entry.depth == currdepth &&*/ entry.zobrist == CurrentHash) //check the whole hash, in case of collishns
+            bool Intable = (TranspoTable[currdepth].TryGetValue((ushort)(CurrentHash), out entry)); //checks the transpo table
+            if (Intable && /*entry.depth == currdepth &&*/ entry.zobrist == CurrentHash && entry.WM == Wmask && entry.BM == Bmask) //check the whole hash, in case of collishns
             {
                 if (entry.flag == 1) //exact 
                 {
@@ -2324,7 +2331,15 @@
                 donemove = move;
                 int curreval;
 
-                if (InsufMaterial()||NoProgress())
+                /*if (InsufMaterial()||NoProgress())
+                {
+                    staticEval = 0;
+                }*/
+                if (InsufMaterial())
+                {
+                    curreval = 0;
+                }
+                else if (NoProgress())
                 {
                     curreval = 0;
                 }
@@ -2371,13 +2386,15 @@
             { //if player has no legal moves, it's mate or stalemate
                 return -EndMateEval(white, 1 + currdepth);
             }
-            
+
 
             Hashentry next = new Hashentry(maxdepth);
             next.depth = currdepth;
             next.eval = BestValue;
             next.zobrist = CurrentHash;
             next.move = currentBest;
+            next.WM = Wmask;
+            next.BM = Bmask;
             if (BestValue <= AlphaOrig)
             {
                 next.flag = 2;
@@ -2390,11 +2407,11 @@
             {
                 next.flag = 1;
             }
-            if (!TranspoTable[currdepth].ContainsKey((uint)(next.zobrist)))
+            if (!TranspoTable[currdepth].ContainsKey((ushort)(next.zobrist)))
             {
-                TranspoTable[currdepth].Add((uint)next.zobrist, next);
+                TranspoTable[currdepth].Add((ushort)next.zobrist, next);
             }
-            
+
 
             return alpha;
         }
@@ -2533,28 +2550,32 @@
         }
 
 
-        public static void EndMate(bool white)
+        public static int EndMate(bool white)
         {
             var swr = new StreamWriter("partie.txt", true);
-
+            int result = 0;
 
             if (white && (Attacked(Wking, Wmask, Bmask, Block, false, BitBoards)))
             {
                 Console.WriteLine("Mate for White, Black wins");
                 swr.Write("# 0-1");
+                result = 2;
             }
             else if ((!white) && (Attacked(Bking, Wmask, Bmask, Block, true, BitBoards)))
             {
                 Console.WriteLine("Mate for Black, White wins");
                 swr.Write("# 1-0");
+                result = 3;
             }
             else
             {
                 Console.WriteLine("Stalemate");
                 swr.Write(" 1/2");
+                result = 1;
             }
             swr.Close();
             RewritePartia("partie.txt");
+            return result;
         }
 
         public static int EndMateEval(bool white, int dep)
@@ -3060,17 +3081,14 @@
 
 
 
-        public bool OneMover(bool white,uint mov, int totmoves,int depth_base)
+        public int OneMover(bool white,uint mov, int totmoves,int depth_base)
         {
 
             CurrentHash = HashPosition(HashSeed);
             int deph = depth_base;
-            TranspoTable = new Dictionary<uint, Hashentry>[depth_base + 4];
+            
 
-            for (int k = 0; k < TranspoTable.Length; ++k)
-            {
-                TranspoTable[k] = new Dictionary<uint, Hashentry>();
-            }
+            
 
             uint[] mvm;
             bool end;
@@ -3081,27 +3099,37 @@
             ulong f = 0;
             for (int m = 2; m < 12; ++m)
             {
+                //check if there are other pieces than pawns
                 if (m == 6 || m == 7)
                     continue;
                 f |= BitBoards[m];
             }
+            deph = depth_base;
             if (f == 0)
             {
-                deph = depth_base + 4;
+                //only pawn endgame
+                deph += 3;
+            }
+            else if (evwhite + evblack < 600)
+            {
+                deph += 4;
             }
             else if (evwhite + evblack < 1200)
             {
-                deph = depth_base + 2;
+                deph += 2;
             }
             else if (evwhite + evblack < 2500)
             {
-                deph = depth_base + 1;
+                deph += 1;
             }
             else
             {
-                deph = depth_base;
             }
-
+            TranspoTable = new Dictionary<uint, Hashentry>[deph];
+            for (int k = 0; k < TranspoTable.Length; ++k)
+            {
+                TranspoTable[k] = new Dictionary<uint, Hashentry>();
+            }
             var swplay = new Stopwatch();
 
             NodesSearched = 0;
@@ -3138,8 +3166,7 @@
                 if (mov == 0)
                 {
                     end = true;
-                    EndMate(player);
-                    return false;
+                    return EndMate(player);
                 }
 
                 /*Console.WriteLine("{0:X}", CurrentHash);
@@ -3202,8 +3229,7 @@
             }
             if (end)
             {
-                EndMate(player);
-                return false;
+                return EndMate(player);
             }
 
             Notation += DecodeMove((int)mov) + " ";
@@ -3216,7 +3242,7 @@
             if (InsufMaterial()||NoProgress())
             {
                 EndDraw();
-                return false;
+                return 1;
             }
             if (!player)
             {
@@ -3226,7 +3252,7 @@
 
             player ^= true;
             //end of infinite loop
-            return true;
+            return 0;
         }
 
         public struct LINE
@@ -3688,7 +3714,7 @@
                 //return;
 
             }
-            return;
+            return ;
         }
     }
     public class ULongRandom

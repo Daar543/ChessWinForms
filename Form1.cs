@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -15,14 +16,15 @@ namespace Sachy_Obrazky
     {
         public Form1()
         {
-            enj = new Engine();
-            ulong[] BB = enj.Initialize(3);
             InitializeComponent();
+            enj = new Engine();
             MakeBoard();
+            ulong[] BB = enj.Initialize(3);
             temporaryBitBoards = new ulong[12];
-            PrintPic(BB,false);
-            PlayGame(enj);
-            
+            PrintPic(new ulong[12], false);
+            PrintPic(BB, false);
+            white = ( Engine.Position & (1 << 4)) != 0;
+            //PlayGame(enj);
         }
         ulong[] temporaryBitBoards;
         Engine enj;
@@ -124,14 +126,21 @@ namespace Sachy_Obrazky
 
         string notation = "";
         int gamelength = 0;
-        bool white = true;
+        bool white;
         ulong[] bitbs = new ulong[12];
-        
 
-        public bool PlayGame(Engine enj)
+        static int result = 0;
+
+
+
+
+
+
+
+        public int PlayGame(Engine enj)
         {
             moveMade = false;
-            bool x = enj.OneMover(white, (uint)gamelength,gamelength, 4);
+            int x = enj.OneMover(white, (uint)gamelength,gamelength, 6);
             notation = enj.Notation;
             gamelength += 1;
             white ^= true;
@@ -141,6 +150,11 @@ namespace Sachy_Obrazky
             moveMade = true;
             return x;
         }
+
+
+
+
+
 
         /*protected override CreateParams CreateParams
         {
@@ -184,6 +198,7 @@ namespace Sachy_Obrazky
             "Brook_light.png",
             "Bqueen_light.png",
         };
+        
         public void PrintPic(ulong[] bitboards, bool onlyChanged)
         { //same as the Printout in engine function, but changes the names of buttons
             int n = -1;
@@ -339,22 +354,47 @@ namespace Sachy_Obrazky
             }
             */
         }
+        static readonly string[] results =
+        {
+            "*",
+            "1/2 - 1/2",
+            "0 - 1",
+            "1 - 0",
+
+        };
         bool continuing = true;
         private long lastTimeRan = System.DateTime.Now.Ticks;
 
         private void timer1_Tick(object sender, EventArgs e) //tick time = 10
         {
             //if the last time ran is less than 3 seconds ago, skip the timer tick.
-            if (moveMade is false /*|| lastTimeRan > (System.DateTime.Now.Ticks - 20_000_000)*/|| !continuing)
+            if (moveMade is false || lastTimeRan > (System.DateTime.Now.Ticks - 10_000_000)|| !continuing)
             {
                 return;
             }
             lastTimeRan = System.DateTime.Now.Ticks;
-            continuing = PlayGame(enj);
-            /*if (!continuing)
+            result = PlayGame(enj);
+            //continuing = PlayGame(enj) == 0;
+            if (result != 0)
             {
-                Finish()
-            }*/
+                Finish();
+            }
+        }
+        private void Finish()
+        {
+            timer1.Stop();
+            KonecHry.Text = "Konec hry " + results[result];
+            Controls.Add(KonecHry);
+            KonecHry.Show();
+            KonecHry.BringToFront();
+        }
+        private void timer2_Tick(object sender, EventArgs e)
+        {
+
+        }
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

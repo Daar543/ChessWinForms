@@ -1000,6 +1000,7 @@
             //B1 = piece, B2 = From, B3 = To, B4 = Flags
             //Flags: 1b capture, 2b castle, 3b promo,  1b double, 1b ep
             int flags = 0;
+            bool ep = false;
             if (piece == 1)
             {
                 //promo
@@ -1009,15 +1010,39 @@
                 //doublemove
                 else if ((48 <= from && from < 56) && (32 <= to && to < 40))
                     flags |= 1 << 1;
+                else if ((from & 0b111) != (to & 0b111)) //diagonal move, EP possiblity
+                {
+                    ep = true;
+                }
+            }
+            else if(piece == 0 && from == 60)
+            { //king, castling
+                if(to == 58)
+                {
+                    return 1 << 5;
+                }
+                else if(to == 62)
+                {
+                    return 1 << 6;
+                }
             }
             ulong p = (ulong)1 << to; //bit on the target square
-            if ((p & Bmask) != 0) //capture, duh
+            if ((p & Bmask) != 0 || ep) //capture, duh
             {
                 flags |= 1 << 7;
                 for (int i = 7; i < 12; ++i) //gotta scan through black bitboards and figure out the type of captured piece
                 {
                     if ((p & BitBoards[i]) != 0)
+                    {
                         piece |= i << 4; //sets the upper 4 bits to a type of captured piece
+                        ep = false;
+                        break;
+                    }
+                       
+                }
+                if (ep)
+                { //if there is no piece on the target square then it's EP
+                    flags |= 1;
                 }
             }
 
@@ -1108,11 +1133,13 @@
             //sets the 5th or 6th bit
             if ((c & 1) != 0)
             {
+                //queenside
                 move = 1 << 5;
                 moves.Add(move);
             }
             if ((c & 2) != 0)
             {
+                //kingside
                 move = 1 << 6;
                 moves.Add(move);
             }
@@ -1198,6 +1225,7 @@
             //B1 = piece, B2 = From, B3 = To, B4 = Flags
             //Flags: 1b capture, 2b castle, 3b promo,  1b double, 1b ep
             int flags = 0;
+            bool ep = false;
             if (piece == 7)
             {
                 //promo
@@ -1207,16 +1235,43 @@
                 //double
                 else if ((8 <= from && from < 16) && (24 <= to && to < 32))
                     flags |= 1 << 1;
-
+                else if ((from & 0b111) != (to & 0b111)) //diagonal move
+                {
+                    ep = true;
+                }
             }
-            ulong p = (ulong)1 << to;
-            if ((p & Wmask) != 0) //capture, duh
+            else if(piece == 6 && from == 4)
             {
+                //king,castling
+                if (to == 2)
+                {
+                    return 1 << 5;
+                }
+                else if (to == 6)
+                {
+                    return 1 << 6;
+                }
+            }
+                
+            
+            ulong p = (ulong)1 << to;
+            if ((p & Wmask) != 0 || ep) //capture, duh
+            {
+                
                 flags |= 1 << 7;
                 for (int i = 1; i < 6; ++i) //gotta scan through white bitboards and figure out the type of captured piece
                 {
                     if ((p & BitBoards[i]) != 0)
+                    {
                         piece |= i << 4; //sets the upper 4 bits to a type of captured piece
+                        ep = false;
+                        break;
+                    }
+
+                }
+                if (ep)
+                { //if there is no piece on the target square then it's EP
+                    flags |= 1;
                 }
             }
 
@@ -1290,11 +1345,13 @@
             byte c = Castling_Black(Position);
             if ((c & 1) != 0)
             {
+                //queenside
                 move = 1 << 5;
                 moves.Add(move);
             }
             if ((c & 2) != 0)
             {
+                //kingside
                 move = 1 << 6;
                 moves.Add(move);
             }
@@ -3421,7 +3478,11 @@
                             foreach (var e in eps)
                             {//if the capture exists, the 7th bit must be set
                                 if ((e & (1 << 7)) != 0)
-                                    allmoves |= (ulong)1 << e;
+                                {
+                                    int to = (e >> 8) & ((1 << 8) - 1);
+                                    allmoves |= (ulong)1 << to;
+                                }
+                                
                             }
                         }
                         break;
@@ -3433,7 +3494,10 @@
                             foreach (var e in eps)
                             {//if the capture exists, the 7th bit must be set
                                 if ((e & (1 << 7)) != 0)
-                                    allmoves |= (ulong)1 << e;
+                                {
+                                    int to = (e >> 8) & ((1 << 8) - 1);
+                                    allmoves |= (ulong)1 << to;
+                                }
                             }
                         }
                         break;
@@ -3442,12 +3506,14 @@
 
                         //sets the 5th or 6th bit
                         if ((c & 1) != 0)
-                        {
-                            allmoves |= (ulong)1 << 62;
+                        { 
+                            //queenside
+                            allmoves |= (ulong)1 << 58;
                         }
                         if ((c & 2) != 0)
                         {
-                            allmoves |= (ulong)1 << 58;
+                            //kingside
+                            allmoves |= (ulong)1 << 62;
                         }
                         break;
                     case 6:
@@ -3456,10 +3522,12 @@
                         //sets the 5th or 6th bit
                         if ((c & 1) != 0)
                         {
+                            //queenside
                             allmoves |= (ulong)1 << 2;
                         }
                         if ((c & 2) != 0)
                         {
+                            //kingside
                             allmoves |= (ulong)1 << 6;
                         }
                         break;

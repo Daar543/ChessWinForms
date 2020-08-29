@@ -1459,11 +1459,12 @@
             Printout(Block | ((ulong)(1) << idx));
             Printout(Block | movs);
         }*/
-        public static ulong[] BitBoards { get; set; }
+        public static ulong[] BitBoards;
         public ulong[] GetBitBoards()
         {
             return BitBoards;
         }
+
         //public static ulong[] BitBoards = new ulong[12];
         static ulong[] CreateBBoards(char[] board)
         { //creates the basic bitboards
@@ -3081,7 +3082,7 @@
 
 
 
-        public int OneMover(bool white,uint mov, int totmoves,int depth_base)
+        public int ComputersMove(bool white,uint mov, int totmoves,int depth_base)
         {
 
             CurrentHash = HashPosition(HashSeed);
@@ -3254,6 +3255,227 @@
             //end of infinite loop
             return 0;
         }
+
+        public int PlayersMove(bool white, uint mov, int totmoves, int depth_base)
+        {
+
+            CurrentHash = HashPosition(HashSeed);
+            int deph = depth_base;
+
+
+
+
+            uint[] mvm;
+            bool end;
+            bool player = white;
+
+            int evwhite = LazyEvaluation(true);
+            int evblack = LazyEvaluation(false);
+            ulong f = 0;
+            for (int m = 2; m < 12; ++m)
+            {
+                //check if there are other pieces than pawns
+                if (m == 6 || m == 7)
+                    continue;
+                f |= BitBoards[m];
+            }
+            deph = depth_base;
+            if (f == 0)
+            {
+                //only pawn endgame
+                deph += 3;
+            }
+            else if (evwhite + evblack < 600)
+            {
+                deph += 4;
+            }
+            else if (evwhite + evblack < 1200)
+            {
+                deph += 2;
+            }
+            else if (evwhite + evblack < 2500)
+            {
+                deph += 1;
+            }
+            else
+            {
+            }
+            TranspoTable = new Dictionary<uint, Hashentry>[deph];
+            for (int k = 0; k < TranspoTable.Length; ++k)
+            {
+                TranspoTable[k] = new Dictionary<uint, Hashentry>();
+            }
+            var swplay = new Stopwatch();
+
+            NodesSearched = 0;
+            TimeSpent = 0;
+
+            int ab = 0;
+            LINE principalVariation = new LINE(deph /*+ (player ? 0 : -1)*/);
+            for (int k = 0; k < TranspoTable.Length; ++k)
+            {
+                TranspoTable[k] = new Dictionary<uint, Hashentry>();
+            }
+            if (player || !player)
+            {
+                NodesSearched = 0;
+                swplay.Start();
+
+                // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, false); //no random
+                ab = AlphaBeta_Rewritten(0, deph /*+ (player ? 0 : -1)*/, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, true); //both random
+                                                                                                                                                   // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? true : false); //white random
+                                                                                                                                                   // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? false : true); //black random
+
+                //ab = AlphaBeta_Rewritten(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, false);
+
+                swplay.Stop();
+                TimeSpent = swplay.ElapsedMilliseconds;
+                swplay.Reset();
+
+
+                end = true;
+                for (int i = 0; i < 1; ++i)
+                {
+                    mov = principalVariation.argmove[0];
+                }
+                if (mov == 0)
+                {
+                    end = true;
+                    return EndMate(player);
+                }
+
+                /*Console.WriteLine("{0:X}", CurrentHash);
+                mvm = MakeMove(mov, player);
+                Console.WriteLine("{0:X}", CurrentHash);
+                UndoMove(mvm, player);
+                Console.WriteLine("{0:X}", CurrentHash);
+                mvm = MakeMove(mov, player);
+                Console.WriteLine("{0:X}", CurrentHash);*/
+                mvm = MakeMove(mov, player);
+                if (Attacked(player ? Wking : Bking, Wmask, Bmask, Block, !player, BitBoards))
+                {
+                    UndoMove(mvm, player);
+                    end = true;
+                }
+                else
+                {
+                    end = false;
+                }
+            }
+            else
+            {
+                Console.WriteLine("Tah");
+                string am = Console.ReadLine();
+                int from = am[0] - 'a' + 8 * (8 - (am[1] - 48));
+                int to = am[2] - 'a' + 8 * (8 - (am[3] - 48));
+                int piece = 0;
+                for (int n = 0; n < 12; ++n)
+                {
+                    if (Bit(BitBoards[n], from))
+                    {
+                        piece = n;
+                        break;
+                    }
+
+
+                }
+
+                if (player)
+                {
+                    mov = BuildMoveWhite(piece, from, to);
+                }
+                else
+                {
+                    mov = BuildMoveBlack(piece, from, to);
+                }
+                mvm = MakeMove(mov, player);
+                if (Attacked(player ? Wking : Bking, Wmask, Bmask, Block, !player, BitBoards))
+                {
+                    UndoMove(mvm, player);
+                    Console.WriteLine("Error: Illegal Move");
+                    Console.WriteLine(DecodeMove((int)mov));
+                    end = true;
+
+                }
+                else
+                {
+                    end = false;
+                }
+            }
+            if (end)
+            {
+                return EndMate(player);
+            }
+
+            Notation += DecodeMove((int)mov) + " ";
+            Notation += "{" + Evaluation().ToString() + "} ";
+
+            var swr = new StreamWriter("partie.txt", false);
+            swr.Write(Notation);
+            swr.Close();
+
+            if (InsufMaterial() || NoProgress())
+            {
+                EndDraw();
+                return 1;
+            }
+            if (!player)
+            {
+                totmoves += 1;
+            }
+
+
+            player ^= true;
+            //end of infinite loop
+            return 0;
+        }
+
+        public static ulong DisplayLegalMoves(int idx, bool white) 
+        {
+            //generates legal moves for piece on this square, or pieces which can capture this piece
+            ulong legalmoves = 0;
+            ulong allmoves = 0;
+            int piece = -1;
+
+            for(int i = white ? 0 : 6; i < 6 + (white ? 0 : 6); ++i)
+            {
+                if (Bit(BitBoards[i], idx))
+                {
+                    piece = i;
+                    break;
+                }
+            }
+            if (piece == -1)
+                return 0;
+
+            if (white&&piece<6 || (white is false && piece>=6))
+            { //if the player is the same as the piece's color, generate moves for it
+                allmoves = GenMoves(idx, piece, white, Wmask, Bmask, Block);
+                ulong pointr = 1;
+                for (int i = 0; i < 64; i++)
+                {
+                    if((allmoves & pointr) !=0) //pseudolegal square to be moved on 
+                    {
+                        uint pseudolegalmove = white ? BuildMoveWhite(piece, idx, i) : BuildMoveBlack(piece, idx, i);
+                        uint[] backup = MakeMove(pseudolegalmove, white);
+                        //if the move is legal = king is not attacked
+                        if (!Attacked(white ? Wking : Bking, Wmask, Bmask, Block, white, BitBoards))
+                        {
+                            legalmoves |= pointr;
+                        }
+                        //and returns back the position
+                        UndoMove(backup, white);
+                    }
+                    pointr <<= 1;
+                }
+            }
+            else
+            { //if the player is the opposite as the piece's color, highlight all pieces that can capture it
+
+            }
+            return legalmoves;
+        }
+
 
         public struct LINE
         {

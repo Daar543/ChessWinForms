@@ -3082,15 +3082,15 @@
 
 
 
-        public int ComputersMove(bool white,uint mov, int totmoves,int depth_base)
+        public int ComputersMove(bool white, int totmoves,int depth_base)
         {
 
             CurrentHash = HashPosition(HashSeed);
             int deph = depth_base;
-            
 
-            
 
+
+            uint mov = 0;
             uint[] mvm;
             bool end;
             bool player = white;
@@ -3256,11 +3256,10 @@
             return 0;
         }
 
-        public int PlayersMove(bool white, uint mov, int totmoves, int depth_base)
+        public int PlayersMove(bool white,int totmoves, uint mov)
         {
 
             CurrentHash = HashPosition(HashSeed);
-            int deph = depth_base;
 
 
 
@@ -3268,89 +3267,36 @@
             uint[] mvm;
             bool end;
             bool player = white;
-
+            string writtentext = ""; //a text which will display in the text box
             int evwhite = LazyEvaluation(true);
             int evblack = LazyEvaluation(false);
-            ulong f = 0;
-            for (int m = 2; m < 12; ++m)
-            {
-                //check if there are other pieces than pawns
-                if (m == 6 || m == 7)
-                    continue;
-                f |= BitBoards[m];
-            }
-            deph = depth_base;
-            if (f == 0)
-            {
-                //only pawn endgame
-                deph += 3;
-            }
-            else if (evwhite + evblack < 600)
-            {
-                deph += 4;
-            }
-            else if (evwhite + evblack < 1200)
-            {
-                deph += 2;
-            }
-            else if (evwhite + evblack < 2500)
-            {
-                deph += 1;
-            }
-            else
-            {
-            }
-            TranspoTable = new Dictionary<uint, Hashentry>[deph];
-            for (int k = 0; k < TranspoTable.Length; ++k)
-            {
-                TranspoTable[k] = new Dictionary<uint, Hashentry>();
-            }
+            
+            
             var swplay = new Stopwatch();
-
-            NodesSearched = 0;
             TimeSpent = 0;
 
-            int ab = 0;
-            LINE principalVariation = new LINE(deph /*+ (player ? 0 : -1)*/);
-            for (int k = 0; k < TranspoTable.Length; ++k)
+
+            if (false)
             {
-                TranspoTable[k] = new Dictionary<uint, Hashentry>();
+
             }
-            if (player || !player)
+            /*if (player || !player)
             {
-                NodesSearched = 0;
                 swplay.Start();
-
-                // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, false); //no random
-                ab = AlphaBeta_Rewritten(0, deph /*+ (player ? 0 : -1)*/, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, true); //both random
-                                                                                                                                                   // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? true : false); //white random
-                                                                                                                                                   // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? false : true); //black random
-
-                //ab = AlphaBeta_Rewritten(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, false);
-
                 swplay.Stop();
                 TimeSpent = swplay.ElapsedMilliseconds;
                 swplay.Reset();
 
 
                 end = true;
-                for (int i = 0; i < 1; ++i)
-                {
-                    mov = principalVariation.argmove[0];
-                }
-                if (mov == 0)
-                {
-                    end = true;
-                    return EndMate(player);
-                }
 
-                /*Console.WriteLine("{0:X}", CurrentHash);
+                Console.WriteLine("{0:X}", CurrentHash);
                 mvm = MakeMove(mov, player);
                 Console.WriteLine("{0:X}", CurrentHash);
                 UndoMove(mvm, player);
                 Console.WriteLine("{0:X}", CurrentHash);
                 mvm = MakeMove(mov, player);
-                Console.WriteLine("{0:X}", CurrentHash);*/
+                Console.WriteLine("{0:X}", CurrentHash);
                 mvm = MakeMove(mov, player);
                 if (Attacked(player ? Wking : Bking, Wmask, Bmask, Block, !player, BitBoards))
                 {
@@ -3361,10 +3307,11 @@
                 {
                     end = false;
                 }
-            }
+                end = false;
+            }*/
             else
             {
-                Console.WriteLine("Tah");
+                //Console.WriteLine("Tah");
                 string am = Console.ReadLine();
                 int from = am[0] - 'a' + 8 * (8 - (am[1] - 48));
                 int to = am[2] - 'a' + 8 * (8 - (am[3] - 48));
@@ -3392,20 +3339,22 @@
                 if (Attacked(player ? Wking : Bking, Wmask, Bmask, Block, !player, BitBoards))
                 {
                     UndoMove(mvm, player);
-                    Console.WriteLine("Error: Illegal Move");
-                    Console.WriteLine(DecodeMove((int)mov));
-                    end = true;
+                    //Console.WriteLine("Error: Illegal Move");
+                    //Console.WriteLine(DecodeMove((int)mov));
+                    writtentext = "Error: Illegal Move" + DecodeMove((int)mov);
+                    //end = true;
 
                 }
                 else
                 {
+                    writtentext = DecodeMove((int)mov);
                     end = false;
                 }
             }
-            if (end)
+            /*if (end)
             {
                 return EndMate(player);
-            }
+            }*/
 
             Notation += DecodeMove((int)mov) + " ";
             Notation += "{" + Evaluation().ToString() + "} ";

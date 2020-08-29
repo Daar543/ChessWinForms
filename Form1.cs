@@ -137,10 +137,11 @@ namespace Sachy_Obrazky
 
 
 
-        public int PlayGame(Engine enj)
+        public int GoNextMove(Engine enj)
         {
             moveMade = false;
-            int x = enj.OneMover(white, (uint)gamelength,gamelength, 6);
+            int x = enj.ComputersMove(white,gamelength, 6);
+            //int x = enj.PlayersMove(white, gamelength, 0);
             notation = enj.Notation;
             gamelength += 1;
             white ^= true;
@@ -151,7 +152,18 @@ namespace Sachy_Obrazky
             return x;
         }
 
-
+        public int PlayNextMove(Engine enj, uint move)
+        {
+            int x = enj.PlayersMove(white, gamelength, move);
+            notation = enj.Notation;
+            gamelength += 1;
+            white ^= true;
+            bitbs = enj.GetBitBoards();
+            PrintPic(bitbs, true);
+            temporaryBitBoards = bitbs;
+            moveMade = true;
+            return x;
+        }
 
 
 
@@ -373,7 +385,7 @@ namespace Sachy_Obrazky
                 return;
             }
             lastTimeRan = System.DateTime.Now.Ticks;
-            result = PlayGame(enj);
+            result = GoNextMove(enj);
             //continuing = PlayGame(enj) == 0;
             if (result != 0)
             {

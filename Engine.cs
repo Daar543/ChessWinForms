@@ -978,7 +978,21 @@
             }
             return EP;
         }
-        static uint BuildMoveWhite(int piece, int from, int to)
+
+        public int GetPiece(int idx)
+        {
+            int piece = -1;
+            for(int i = 0; i < 12; ++i)
+            {
+                if (Bit(BitBoards[i], idx))
+                {
+                    piece = i;
+                    break;
+                }
+            }
+            return piece;
+        }
+        public static uint BuildMoveWhite(int piece, int from, int to)
         {
             /*var sw = new Stopwatch();
             sw.Start();*/
@@ -3311,30 +3325,14 @@
             }*/
             else
             {
-                //Console.WriteLine("Tah");
-                string am = Console.ReadLine();
-                int from = am[0] - 'a' + 8 * (8 - (am[1] - 48));
-                int to = am[2] - 'a' + 8 * (8 - (am[3] - 48));
-                int piece = 0;
-                for (int n = 0; n < 12; ++n)
-                {
-                    if (Bit(BitBoards[n], from))
-                    {
-                        piece = n;
-                        break;
-                    }
-
-
-                }
-
-                if (player)
+                /*if (player)
                 {
                     mov = BuildMoveWhite(piece, from, to);
                 }
                 else
                 {
                     mov = BuildMoveBlack(piece, from, to);
-                }
+                }*/
                 mvm = MakeMove(mov, player);
                 if (Attacked(player ? Wking : Bking, Wmask, Bmask, Block, !player, BitBoards))
                 {
@@ -3379,7 +3377,19 @@
             return 0;
         }
 
-        public static ulong DisplayLegalMoves(int idx, bool white) 
+        public uint CompleteMove(int piece, int from, int to, bool white)
+        {
+            if (white)
+            {
+                return BuildMoveWhite(piece, from, to);
+            }
+            else
+            {
+                return BuildMoveBlack(piece, from, to);
+            }
+        }
+
+        public ulong DisplayLegalMoves(int idx, bool white) 
         {
             //generates legal moves for piece on this square, or pieces which can capture this piece
             ulong legalmoves = 0;
@@ -3397,9 +3407,66 @@
             if (piece == -1)
                 return 0;
 
-            if (white&&piece<6 || (white is false && piece>=6))
+            if (white && piece < 6 || (white is false && piece >= 6))
             { //if the player is the same as the piece's color, generate moves for it
                 allmoves = GenMoves(idx, piece, white, Wmask, Bmask, Block);
+
+                switch (piece)
+                {
+                    case 1:
+                        int epsq = (Position >> 8) & 0b111111;
+                        if ((epsq != 0) && Bit(BitBoards[BB_p], epsq + 8))
+                        {
+                            int[] eps = EPGen(epsq, true);
+                            foreach (var e in eps)
+                            {//if the capture exists, the 7th bit must be set
+                                if ((e & (1 << 7)) != 0)
+                                    allmoves |= (ulong)1 << e;
+                            }
+                        }
+                        break;
+                    case 7:
+                        epsq = (Position >> 8) & 0b111111;
+                        if ((epsq != 0) && Bit(BitBoards[BB_P], epsq - 8))
+                        {
+                            int[] eps = EPGen(epsq, false);
+                            foreach (var e in eps)
+                            {//if the capture exists, the 7th bit must be set
+                                if ((e & (1 << 7)) != 0)
+                                    allmoves |= (ulong)1 << e;
+                            }
+                        }
+                        break;
+                    case 0:
+                        byte c = Castling_White(Position);
+
+                        //sets the 5th or 6th bit
+                        if ((c & 1) != 0)
+                        {
+                            allmoves |= (ulong)1 << 62;
+                        }
+                        if ((c & 2) != 0)
+                        {
+                            allmoves |= (ulong)1 << 58;
+                        }
+                        break;
+                    case 6:
+                        c = Castling_Black(Position);
+
+                        //sets the 5th or 6th bit
+                        if ((c & 1) != 0)
+                        {
+                            allmoves |= (ulong)1 << 2;
+                        }
+                        if ((c & 2) != 0)
+                        {
+                            allmoves |= (ulong)1 << 6;
+                        }
+                        break;
+
+                }
+               
+
                 ulong pointr = 1;
                 for (int i = 0; i < 64; i++)
                 {
@@ -3408,7 +3475,7 @@
                         uint pseudolegalmove = white ? BuildMoveWhite(piece, idx, i) : BuildMoveBlack(piece, idx, i);
                         uint[] backup = MakeMove(pseudolegalmove, white);
                         //if the move is legal = king is not attacked
-                        if (!Attacked(white ? Wking : Bking, Wmask, Bmask, Block, white, BitBoards))
+                        if (!Attacked(white ? Wking : Bking, Wmask, Bmask, Block, !white, BitBoards))
                         {
                             legalmoves |= pointr;
                         }

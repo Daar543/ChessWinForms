@@ -25,7 +25,15 @@ namespace Sachy_Obrazky
             PrintPic(BB, false);
             white = ( Engine.Position & (1 << 4)) != 0;
             //PlayGame(enj);
+            timer1.Stop();
         }
+
+
+        static readonly Color light = Color.LightGray;
+        static readonly Color dark = Color.Brown;
+        static readonly Color clicked_own = Color.LightGreen;
+        static readonly Color clicked_opponent = Color.Red;
+        static readonly Color allowed = Color.Green;
         ulong[] temporaryBitBoards;
         Engine enj;
         bool moveMade = true;
@@ -42,7 +50,7 @@ namespace Sachy_Obrazky
                 ButtonBoard[i] = new Button();
                 ButtonBoard[i].Height = size;
                 ButtonBoard[i].Width = size;
-                ButtonBoard[i].BackColor = Engine.SqColor(i) ? Color.White : Color.Brown;
+                ButtonBoard[i].BackColor = Engine.SqColor(i) ? dark : light;
                 panel1.Controls.Add(ButtonBoard[i]);
 
                 //sets location 
@@ -53,6 +61,9 @@ namespace Sachy_Obrazky
 
                 //text is determined by the normal notation rule
                 ButtonBoard[i].Text = ((char)((i&0b111) + 'a')).ToString() + ((8-(i >> 3)).ToString());
+
+                //click handler
+                ButtonBoard[i].Click += Button_Click;
             }
 
         }
@@ -128,7 +139,8 @@ namespace Sachy_Obrazky
         int gamelength = 0;
         bool white;
         ulong[] bitbs = new ulong[12];
-
+        int selectedSquare;
+        int selectedPiece;
         static int result = 0;
 
 
@@ -165,7 +177,54 @@ namespace Sachy_Obrazky
             return x;
         }
 
+        void Button_Click(object sender, EventArgs e)
+        {
+            Button button = (Button)sender;
+            // use Name or Tag of button
+            PieceClicked((int)button.Tag);
+            return;
+        }
+        public void PieceClicked(int idx)
+        { //when a piece is clicked, it displays green squares where the piece can move
 
+            //if the same piece h.b. already clicked, return the buttons back to normal;
+            ulong moveBitboard;
+
+            if (ButtonBoard[idx].BackColor == clicked_own)
+            { //same piece - cancel the lighting
+                moveBitboard = 0;
+                //ButtonBoard[idx].BackColor = Engine.SqColor(idx) ? light:dark;
+                selectedPiece = -1;
+                selectedSquare = -1;
+            }
+            else if (ButtonBoard[idx].BackColor == allowed)
+            { //target square of current piece
+                moveBitboard = (ulong)1 << idx | (ulong) 1<<selectedSquare; //current square will be undercolored
+                uint nextmove = enj.CompleteMove(selectedPiece, selectedSquare, idx, white);
+                PlayNextMove(enj, nextmove);
+                selectedPiece = -1;
+                selectedSquare = -1;
+            }
+            else
+            { //new piece
+                moveBitboard = enj.DisplayLegalMoves(idx, white);
+                selectedSquare = idx;
+                selectedPiece = enj.GetPiece(idx);
+            }
+            ulong pointr = 1;
+            for(int i = 0; i < 64; ++i)
+            {
+                if((pointr & moveBitboard) != 0) //if legal
+                {
+                    ButtonBoard[i].BackColor = Color.Green;
+                }
+                else
+                { //set it as default
+                    ButtonBoard[i].BackColor = Engine.SqColor(i) ? light:dark;
+                }
+                pointr <<= 1;
+            }
+        }
 
 
         /*protected override CreateParams CreateParams
@@ -332,16 +391,16 @@ namespace Sachy_Obrazky
                 if (piece == ' ')
                 {
                     //if there is no piece
-                    if (!Engine.SqColor(n)) //if dark
+                    if (Engine.SqColor(n)) //if light
                     {
                         //ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Dark_Paint);
-                        ButtonBoard[n].BackColor = Color.Brown;
+                        ButtonBoard[n].BackColor = light;
                         ButtonBoard[n].Image = null;
                     }
                     else
                     {
                         //ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Light_Paint);
-                        ButtonBoard[n].BackColor = Color.LightGray;
+                        ButtonBoard[n].BackColor = dark;
                         ButtonBoard[n].Image = null;
                     }
                 }

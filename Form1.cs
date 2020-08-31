@@ -34,7 +34,7 @@ namespace Sachy_Obrazky
             moveMade = false;
         }
 
-
+        const int StartPosition = 3;
         static readonly Color light = Color.LightGray;
         static readonly Color dark = Color.Brown;
         static readonly Color clicked_own = Color.LightGreen;
@@ -51,6 +51,7 @@ namespace Sachy_Obrazky
         Button[] proms = new Button[4];
         Button aiw = new Button();
         Button aib = new Button();
+        Button newg = new Button();
 
         private void MakeBoard(bool flipped)
         {
@@ -146,29 +147,30 @@ namespace Sachy_Obrazky
             sav.Click += Save_Click;
 
             //new game
-            var newg = new Button();
             panel2.Controls.Add(newg);
-            newg.Height = size;
-            newg.Width = size;
-            newg.Text = "New game:"+ (whitePlayer_AI ? "AI_" + intelWhite.ToString() : "Player") + "\n vs \n"+(blackPlayer_AI? "AI_"+intelBlack.ToString():"Player");
-            newg.Location = new Point(size * 0, size * 2);
+            newg.Height = 3*size/2;
+            newg.Width = 3*size/2;
+            newg.Text = "New game:\n"+ (whitePlayer_AI ? "AI" + intelWhite.ToString() : "Player") + "\n vs \n"+(blackPlayer_AI? "AI"+intelBlack.ToString():"Player");
+            newg.Location = new Point(size * 0, size * 4);
             newg.Click += NewGame_Click;
 
             //AI diff for white
             panel2.Controls.Add(aiw);
-            aiw.Height = size / 2;
-            aiw.Width = size / 2;
-            aiw.Text = "AI_"+intelWhite.ToString();
-            aiw.Location = new Point(size * 1, size * 2);
-            aiw.Click += AIW_Click;
+            aiw.Height = size/2;
+            aiw.Width = size/2;
+            aiw.Text = "AI\n"+intelWhite.ToString();
+            aiw.Location = new Point(size * 0, size * 3);
+            aiw.Tag = 0;
+            aiw.Click += AISet_Click;
 
             //AI diff for black
             panel2.Controls.Add(aib);
             aib.Height = size / 2;
             aib.Width = size / 2;
-            aib.Text = "AI_" + intelBlack.ToString();
-            aib.Location = new Point(size * 1, (int)(size * 2.5));
-            aib.Click += AIB_Click;
+            aib.Text = "AI\n" + intelBlack.ToString();
+            aib.Location = new Point(size * 0, (int)(size * 3.5));
+            aib.Tag = 1;
+            aib.Click += AISet_Click;
 
             //AI increase
             var aiinc = new Button();
@@ -176,33 +178,43 @@ namespace Sachy_Obrazky
             aiinc.Height = size / 2;
             aiinc.Width = size / 2;
             aiinc.Text = "+";
-            aiinc.Location = new Point(size * 2, size * 2);
+            aiinc.Location = new Point((int)(size * 0.5), size * 3);
             aiinc.Click += AII_Click;
 
             var aidec = new Button();
             panel2.Controls.Add(aidec);
             aidec.Height = size / 2;
             aidec.Width = size / 2;
-            aidec.Text = "+";
-            aidec.Location = new Point(size * 2, (int)(size * 2.5));
+            aidec.Text = "-";
+            aidec.Location = new Point((int)(size * 0.5), (int)(size * 3.5));
             aidec.Click += AID_Click;
 
             var plw = new Button();
             panel2.Controls.Add(plw);
             plw.Height = size / 2;
-            plw.Width = size / 2;
-            plw.Text = "+";
-            plw.Location = new Point(size * 3, (int)(size * 2));
-            plw.Click += PLW_Click;
+            plw.Width = 2 * size / 3;
+            plw.Text = "Player";
+            plw.Location = new Point(size * 1, (int)(size * 3));
+            plw.Tag = 0;
+            plw.Click += AsPlayer_Click;
 
             var plb = new Button();
             panel2.Controls.Add(plb);
             plb.Height = size / 2;
-            plb.Width = size / 2;
-            plb.Text = "+";
-            plb.Location = new Point(size * 3, (int)(size * 2.5));
-            plb.Click += PLB_Click;
+            plb.Width = 2 * size / 3;
+            plb.Text = "Player";
+            plb.Location = new Point(size * 1, (int)(size * 3.5));
+            plb.Tag = 1;
+            plb.Click += AsPlayer_Click;
 
+            //instructions
+            var ins = new Button();
+            panel2.Controls.Add(ins);
+            ins.Height = size / 2;
+            ins.Width = size * 2;
+            //ins.Enabled = false;
+            ins.Location = new Point(size * 0, (int)(size * 2.5));
+            ins.Text = "Click to set AI or player (top white, bottom black). Use +- to change difficulty.";
 
             //promotions
             for (int i = 0; i < 4; ++i)
@@ -287,7 +299,7 @@ namespace Sachy_Obrazky
 
         int intelWhite = 2;
         int intelBlack = 2;
-        
+        int intelAI = 2;
 
 
         public int GoNextMove(Engine enj, bool white)
@@ -472,28 +484,66 @@ namespace Sachy_Obrazky
             return;
         }
 
-        void AII_CLick(object sender, EventArgs e)
+        void AII_Click(object sender, EventArgs e)
         { //increases diff of AI
-            intelWhite += 1;
-            if (intelWhite > 9)
-                intelWhite = 1;
-            intelBlack += 1;
-            if (intelBlack > 9)
-                intelBlack = 1;
-            aiw.Text = "AI_" + intelWhite.ToString();
-            aib.Text = "AI_" + intelWhite.ToString();
+            intelAI += 1;
+            if (intelAI > 9)
+                intelAI = 1;
+            aiw.Text = "AI" + intelAI.ToString();
+            aib.Text = "AI" + intelAI.ToString();
+            return;
         }
 
-        void AID_CLick(object sender, EventArgs e)
-        { //increases diff of AI
-            intelWhite -= 1;
-            if (intelWhite < 1)
-                intelWhite = 9;
-            intelBlack -= 1;
-            if (intelBlack < 1)
-                intelBlack = 9;
-            aiw.Text = "AI_" + intelWhite.ToString();
-            aib.Text = "AI_" + intelWhite.ToString();
+        void AID_Click(object sender, EventArgs e)
+        { //decreases diff of AI
+            intelAI -= 1;
+            if (intelAI < 1)
+                intelAI = 9;
+            aiw.Text = "AI" + intelAI.ToString();
+            aib.Text = "AI" + intelAI.ToString();
+            return;
+        }
+
+        void AISet_Click(object sender, EventArgs e)
+        {
+            Button b = (Button)sender;
+            if((int)b.Tag == 0)
+            {
+                whitePlayer_AI = true;
+                intelWhite = intelAI;
+            }
+            else
+            {
+                blackPlayer_AI = true;
+                intelBlack = intelAI;
+            }
+            newg.Text = "New game:\n" + 
+                (whitePlayer_AI ? "AI" + intelWhite.ToString() : "Player")
+                + "\n vs \n" + 
+                (blackPlayer_AI ? "AI" + intelBlack.ToString() : "Player");
+        }
+
+        void AsPlayer_Click(object sender, EventArgs e)
+        {
+            Button b = (Button) sender;
+            if((int)b.Tag == 0)
+            {
+                whitePlayer_AI = false;
+            }
+            else
+            {
+                blackPlayer_AI = false;
+            }
+            newg.Text = "New game:\n" +
+                (whitePlayer_AI ? "AI" + intelWhite.ToString() : "Player")
+                + "\n vs \n" +
+                (blackPlayer_AI ? "AI" + intelBlack.ToString() : "Player");
+        }
+
+        void NewGame_Click(object sender, EventArgs e)
+        {
+            //just start the game, everything else is initialized
+            enj.Initialize(StartPosition);
         }
         /*protected override CreateParams CreateParams
         {

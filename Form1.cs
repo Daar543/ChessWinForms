@@ -2,6 +2,7 @@
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.Design;
 using System.Data;
 using System.Drawing;
 using System.Linq;
@@ -48,7 +49,8 @@ namespace Sachy_Obrazky
         TextBox[] rankCoords = new TextBox[8];
         TextBox[] fileCoords = new TextBox[8];
         Button[] proms = new Button[4];
-
+        Button aiw = new Button();
+        Button aib = new Button();
 
         private void MakeBoard(bool flipped)
         {
@@ -140,11 +142,70 @@ namespace Sachy_Obrazky
             sav.Height = size;
             sav.Width = size;
             sav.Text = "Save notation";
-            sav.Location = new Point(size * 0, size * 3);
+            sav.Location = new Point(size * 0, size * 1);
             sav.Click += Save_Click;
 
+            //new game
+            var newg = new Button();
+            panel2.Controls.Add(newg);
+            newg.Height = size;
+            newg.Width = size;
+            newg.Text = "New game:"+ (whitePlayer_AI ? "AI_" + intelWhite.ToString() : "Player") + "\n vs \n"+(blackPlayer_AI? "AI_"+intelBlack.ToString():"Player");
+            newg.Location = new Point(size * 0, size * 2);
+            newg.Click += NewGame_Click;
+
+            //AI diff for white
+            panel2.Controls.Add(aiw);
+            aiw.Height = size / 2;
+            aiw.Width = size / 2;
+            aiw.Text = "AI_"+intelWhite.ToString();
+            aiw.Location = new Point(size * 1, size * 2);
+            aiw.Click += AIW_Click;
+
+            //AI diff for black
+            panel2.Controls.Add(aib);
+            aib.Height = size / 2;
+            aib.Width = size / 2;
+            aib.Text = "AI_" + intelBlack.ToString();
+            aib.Location = new Point(size * 1, (int)(size * 2.5));
+            aib.Click += AIB_Click;
+
+            //AI increase
+            var aiinc = new Button();
+            panel2.Controls.Add(aiinc);
+            aiinc.Height = size / 2;
+            aiinc.Width = size / 2;
+            aiinc.Text = "+";
+            aiinc.Location = new Point(size * 2, size * 2);
+            aiinc.Click += AII_Click;
+
+            var aidec = new Button();
+            panel2.Controls.Add(aidec);
+            aidec.Height = size / 2;
+            aidec.Width = size / 2;
+            aidec.Text = "+";
+            aidec.Location = new Point(size * 2, (int)(size * 2.5));
+            aidec.Click += AID_Click;
+
+            var plw = new Button();
+            panel2.Controls.Add(plw);
+            plw.Height = size / 2;
+            plw.Width = size / 2;
+            plw.Text = "+";
+            plw.Location = new Point(size * 3, (int)(size * 2));
+            plw.Click += PLW_Click;
+
+            var plb = new Button();
+            panel2.Controls.Add(plb);
+            plb.Height = size / 2;
+            plb.Width = size / 2;
+            plb.Text = "+";
+            plb.Location = new Point(size * 3, (int)(size * 2.5));
+            plb.Click += PLB_Click;
+
+
             //promotions
-            for(int i = 0; i < 4; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 proms[i] = new Button();
                 panel3.Controls.Add(proms[i]);
@@ -224,13 +285,15 @@ namespace Sachy_Obrazky
         bool whitePlayer_AI = true;
         bool blackPlayer_AI = true;
 
+        int intelWhite = 2;
+        int intelBlack = 2;
+        
 
 
-
-        public int GoNextMove(Engine enj)
+        public int GoNextMove(Engine enj, bool white)
         {
             moveMade = false;
-            enj.ComputersMove(white,gamelength, 5);
+            enj.ComputersMove(white,gamelength, white?intelWhite:intelBlack);
             //int x = enj.PlayersMove(white, gamelength, 0);
             notation = enj.Notation;
             gamelength += 1;
@@ -408,6 +471,30 @@ namespace Sachy_Obrazky
             }
             return;
         }
+
+        void AII_CLick(object sender, EventArgs e)
+        { //increases diff of AI
+            intelWhite += 1;
+            if (intelWhite > 9)
+                intelWhite = 1;
+            intelBlack += 1;
+            if (intelBlack > 9)
+                intelBlack = 1;
+            aiw.Text = "AI_" + intelWhite.ToString();
+            aib.Text = "AI_" + intelWhite.ToString();
+        }
+
+        void AID_CLick(object sender, EventArgs e)
+        { //increases diff of AI
+            intelWhite -= 1;
+            if (intelWhite < 1)
+                intelWhite = 9;
+            intelBlack -= 1;
+            if (intelBlack < 1)
+                intelBlack = 9;
+            aiw.Text = "AI_" + intelWhite.ToString();
+            aib.Text = "AI_" + intelWhite.ToString();
+        }
         /*protected override CreateParams CreateParams
         {
             get
@@ -536,7 +623,7 @@ namespace Sachy_Obrazky
             }
             if (white && whitePlayer_AI || (white is false && blackPlayer_AI)) 
             {
-                result = GoNextMove(enj);
+                result = GoNextMove(enj,white);
             }
             else
             {

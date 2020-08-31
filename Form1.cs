@@ -20,7 +20,8 @@ namespace Sachy_Obrazky
             panel1.Height = panel1.Width;
             panel2.Height = panel1.Width;
             enj = new Engine();
-            MakeBoard(true);
+            MakeBoard(flipped);
+            CreateOptions();
             ulong[] BB = enj.Initialize(3);
             temporaryBitBoards = new ulong[12];
             PrintPic(new ulong[12], false);
@@ -39,9 +40,12 @@ namespace Sachy_Obrazky
         ulong[] temporaryBitBoards;
         Engine enj;
         bool moveMade = true;
+        bool flipped = false;
         public Button[] ButtonBoard = new Button[8 * 8];
         TextBox[] rankCoords = new TextBox[8];
         TextBox[] fileCoords = new TextBox[8];
+
+        
         private void MakeBoard(bool flipped)
         {
             //creates buttons
@@ -106,17 +110,34 @@ namespace Sachy_Obrazky
                 tx.Enabled = false;
                 tx.BringToFront();
             }
-            var refbt = new Button();
+            /*var refbt = new Button();
             panel1.Controls.Add(refbt);
             refbt.Height = size;
             refbt.Width = size;
             refbt.BackColor = Color.Yellow;
-            refbt.Location = new Point(0, 0);
+            refbt.Location = new Point(0, 0);*/
         }
 
         private void CreateOptions()
-        { //board flipping
+        {
+            int size = panel2.Width / 2;
+            //board flipping
+            var flp = new Button();
+            panel2.Controls.Add(flp);
+            flp.Height = size;
+            flp.Width = size;
+            flp.Text = "Flip \n" + (flipped ? "Black" : "White");
+            flp.Location = new Point(size * 0, size * 0);
+            flp.Click += Flip_Click;
 
+            //saving notation
+            var sav = new Button();
+            panel2.Controls.Add(sav);
+            sav.Height = size;
+            sav.Width = size;
+            sav.Text = "Save notation";
+            sav.Location = new Point(size * 0, size * 3);
+            sav.Click += Save_Click;
         }
 
         /*protected override void OnPaintBackground(PaintEventArgs e)
@@ -129,45 +150,6 @@ namespace Sachy_Obrazky
             return (Image)(new Bitmap(imgToResize, size));
         }
 
-        
-        private void PrintPieceImage(Button b, string imgName, PaintEventArgs e)
-        { //prints an image of a piece on given button
-          // Assign an image to the button.
-
-            const double ScaleRatio = 0.8;
-            int width = (int) (b.Width* ScaleRatio);
-            int height = (int) (b.Height * ScaleRatio);
-
-            Image originImage = new Bitmap(Application.StartupPath + "\\Image\\" + imgName);
-            Image image = resizeImage(originImage, new Size(height, width));
-
-            // Make the destination rectangle 30 percent wider and
-            // 30 percent taller than the original image.
-            // Put the upper-left corner of the destination
-            // rectangle at (150, 20).
-            
-            RectangleF destinationRect = new RectangleF(
-                (b.Width - width) / 2,
-                (b.Height - height) / 2,
-                1 * width,
-                1 * height);
-
-            // Draw a portion of the image. Scale that portion of the image
-            // so that it fills the destination rectangle.
-            RectangleF sourceRect = new RectangleF(0, 0, 1 * width, 1 * height);
-            e.Graphics.DrawImage(
-                image,
-                destinationRect,
-                sourceRect,
-                GraphicsUnit.Pixel);
-
-            /*b.Image = Image.FromFile(Application.StartupPath + "\\Image\\"+imgName);
-            // Align the image and text on the button.
-            b.ImageAlign = ContentAlignment.MiddleRight;
-            b.TextAlign = ContentAlignment.MiddleLeft;
-            // Give the button a flat appearance.
-            b.FlatStyle = FlatStyle.Flat;*/
-        }
         static readonly Color[] PieceColors = new Color[]
         {
             Color.White, //king
@@ -277,7 +259,58 @@ namespace Sachy_Obrazky
             }
         }
 
+        void Flip_Click(object sender, EventArgs e)
+        {
+            //flips board
+            flipped ^= true;
+            Button b = (Button)(sender);
+            b.Text = "Flip \n" + (flipped ? "Black" : "White");
+            //by reorganizing buttons
+            /*MakeBoard(flipped);
+            bitbs = enj.GetBitBoards();
+            PrintPic(bitbs, false);*/
+            int size = panel1.Width / 9;
+            if (flipped)
+            {
+                for (int i = 0; i < 64; ++i)
+                {
+                    ButtonBoard[i].Location =
+                        new Point(panel1.Width / 9 + ((63 - i) & 0b111) * size, ((63 - i) >> 3) * size);
+                }
+                for (int i = 0; i < 8; ++i)
+                {
+                    rankCoords[i].Location =
+                        new Point(panel1.Width / 9 - rankCoords[i].Width,
+                        (7 - i) * size + (size - rankCoords[i].Height) / 2); //fixes diff between button height and textbox height
+                    fileCoords[i].Location =
+                        new Point((8 - i) * size, size * 8);
+                }
+            }
+            
+            else
+            {
+                for (int i = 0; i < 64; ++i)
+                {
+                    ButtonBoard[i].Location = 
+                        new Point(panel1.Width / 9 + (i & 0b111) * size, (i >> 3) * size);
+                }
+                for (int i = 0; i < 8; ++i)
+                {
+                    rankCoords[i].Location = 
+                        new Point(panel1.Width / 9 - rankCoords[i].Width,
+                        i * size + (size - rankCoords[i].Height) / 2);
+                    fileCoords[i].Location = 
+                        new Point((1 + i) * size, size * 8);
+                }
+            }
+            return;
+        }
 
+        void Save_Click(object sender, EventArgs e)
+        {
+            Engine.RewritePartia("partie.txt");
+            return;
+        }
         /*protected override CreateParams CreateParams
         {
             get
@@ -343,6 +376,7 @@ namespace Sachy_Obrazky
                         //ButtonBoard[n].Text = piece.ToString();
                         //ButtonBoard[n].BackColor = PieceColors[k];
                         ImagePrint(ButtonBoard[n], k);
+                        //ButtonBoard[n].BringToFront();
                         /*switch (k)
                         {
                             

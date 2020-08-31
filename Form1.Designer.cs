@@ -38,9 +38,9 @@
             // 
             // panel1
             // 
-            this.panel1.Location = new System.Drawing.Point(113, 38);
+            this.panel1.Location = new System.Drawing.Point(151, 38);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(642, 562);
+            this.panel1.Size = new System.Drawing.Size(604, 562);
             this.panel1.TabIndex = 64;
             // 
             // timer1
@@ -60,7 +60,7 @@
             this.KonecHry.Enabled = false;
             this.KonecHry.Font = new System.Drawing.Font("Microsoft Sans Serif", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.KonecHry.HideSelection = false;
-            this.KonecHry.Location = new System.Drawing.Point(113, -6);
+            this.KonecHry.Location = new System.Drawing.Point(151, -6);
             this.KonecHry.Name = "KonecHry";
             this.KonecHry.ReadOnly = true;
             this.KonecHry.Size = new System.Drawing.Size(642, 38);
@@ -73,7 +73,7 @@
             // 
             this.panel2.Location = new System.Drawing.Point(12, 38);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(99, 550);
+            this.panel2.Size = new System.Drawing.Size(133, 550);
             this.panel2.TabIndex = 0;
             // 
             // Form1

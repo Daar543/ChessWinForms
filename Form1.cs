@@ -25,16 +25,16 @@ namespace Sachy_Obrazky
             enj = new Engine();
             MakeBoard(flipped);
             CreateOptions();
-            ulong[] BB = enj.Initialize(3);
+            ulong[] BB = enj.Initialize(StartingPos);
             temporaryBitBoards = new ulong[12];
-            PrintPic(new ulong[12], false);
-            PrintPic(BB, false);
+            PrintPic(new ulong[12]);
+            PrintPic(BB);
             white = ( Engine.Position & (1 << 4)) != 0;
             //PlayGame(enj);
             moveMade = false;
         }
 
-        const int StartPosition = 3;
+        const int StartingPos = 3;
         static readonly Color light = Color.LightGray;
         static readonly Color dark = Color.Brown;
         static readonly Color clicked_own = Color.LightGreen;
@@ -214,7 +214,7 @@ namespace Sachy_Obrazky
             ins.Width = size * 2;
             //ins.Enabled = false;
             ins.Location = new Point(size * 0, (int)(size * 2.5));
-            ins.Text = "Click to set AI or player (top white, bottom black). Use +- to change difficulty.";
+            ins.Text = "Click below to set AI or player (top white, bottom black). Use +- to change difficulty.";
 
             //promotions
             for (int i = 0; i < 4; ++i)
@@ -302,17 +302,17 @@ namespace Sachy_Obrazky
         int intelAI = 2;
 
 
-        public int GoNextMove(Engine enj, bool white)
+        public int GoNextMove(Engine enj)
         {
             moveMade = false;
-            enj.ComputersMove(white,gamelength, white?intelWhite:intelBlack);
+            int mov = enj.ComputersMove(white,gamelength, white?intelWhite:intelBlack);
             //int x = enj.PlayersMove(white, gamelength, 0);
             notation = enj.Notation;
             gamelength += 1;
             white ^= true;
             bitbs = enj.GetBitBoards();
-            PrintPic(bitbs,true);
-            temporaryBitBoards = bitbs;
+            PrintPic(bitbs);
+            HighlightMove(mov);
             moveMade = true;
             int y = enj.DetermineResult(white);
             return y;
@@ -325,13 +325,33 @@ namespace Sachy_Obrazky
             gamelength += 1;
             white ^= true;
             bitbs = enj.GetBitBoards();
-            PrintPic(bitbs, true);
+            PrintPic(bitbs);
             temporaryBitBoards = bitbs;
             moveMade = true;
             int y = enj.DetermineResult(white);
             return y;
         }
 
+        void HighlightMove(int move)
+        { //only highlights the "from" and "to" squares
+            int from = (move>>16) & 255;
+            int to = (move >> 8) & 255;
+            if(from == to)
+            { //castling - it is called on previous move, so white is the opposite...
+                from = white ? 4 : 60;
+                if (Engine.Bit(move, 5)) //qside
+                {
+                    to = from - 2;
+                }
+                else if (Engine.Bit(move, 6)) //kside
+                {
+                    to = from + 2;
+                }
+            }
+            ButtonBoard[from].BackColor = last_move;
+            ButtonBoard[to].BackColor = last_move;
+
+        }
         void Button_Click(object sender, EventArgs e)
         {
             Button button = (Button)sender;
@@ -414,7 +434,7 @@ namespace Sachy_Obrazky
             //by reorganizing buttons
             /*MakeBoard(flipped);
             bitbs = enj.GetBitBoards();
-            PrintPic(bitbs, false);*/
+            PrintPic(bitbs);*/
             int size = panel1.Width / 9;
             if (flipped)
             {
@@ -543,7 +563,16 @@ namespace Sachy_Obrazky
         void NewGame_Click(object sender, EventArgs e)
         {
             //just start the game, everything else is initialized
-            enj.Initialize(StartPosition);
+            timer1.Stop();
+            enj = new Engine();
+            ulong[] BB = enj.Initialize(3);
+            temporaryBitBoards = new ulong[12];
+            PrintPic(new ulong[12]);
+            PrintPic(BB);
+            white = (Engine.Position & (1 << 4)) != 0;
+            //PlayGame(enj);
+            moveMade = false;
+            timer1.Start();
         }
         /*protected override CreateParams CreateParams
         {
@@ -588,21 +617,25 @@ namespace Sachy_Obrazky
             "Bqueen_light.png",
         };
         
-        public void PrintPic(ulong[] bitboards, bool onlyChanged)
+        public void PrintPic(ulong[] bitboards)
         { //same as the Printout in engine function, but changes the names of buttons
             int n = -1;
             foreach(Button btn in ButtonBoard) //hope they are ordered in the same way
             {
                 ++n;
                 char piece = ' ';
+                if (Engine.SqColor(n))
+                {
+                    ButtonBoard[n].BackColor = light;
+                }
+                else
+                {
+                    ButtonBoard[n].BackColor = dark;
+                }
+                   
                 //if occupied, write something here...
                 for ( int k = 0; k < bitboards.Length; ++k)
                 {
-                    /*if(onlyChanged && (temporaryBitBoards[k] == bitbs[k]))
-                    { //no need to rewrite what has not changed
-                        piece = Engine.pieces[k];
-                        continue; 
-                    }*/
                     ButtonBoard[n].Text = "";
                     if (Engine.Bit(bitboards[k], n))
                     {
@@ -622,13 +655,11 @@ namespace Sachy_Obrazky
                     if (Engine.SqColor(n)) //if light
                     {
                         //ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Dark_Paint);
-                        ButtonBoard[n].BackColor = light;
                         ButtonBoard[n].Image = null;
                     }
                     else
                     {
                         //ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Light_Paint);
-                        ButtonBoard[n].BackColor = dark;
                         ButtonBoard[n].Image = null;
                     }
                 }
@@ -673,7 +704,7 @@ namespace Sachy_Obrazky
             }
             if (white && whitePlayer_AI || (white is false && blackPlayer_AI)) 
             {
-                result = GoNextMove(enj,white);
+                result = GoNextMove(enj);
             }
             else
             {

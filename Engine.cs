@@ -3326,7 +3326,7 @@
 
             player ^= true;
             //end of infinite loop
-            return 0;
+            return (int)mov;
         }
 
         public int DetermineResult(bool white)

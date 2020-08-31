@@ -33,11 +33,12 @@
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.timer2 = new System.Windows.Forms.Timer(this.components);
             this.KonecHry = new System.Windows.Forms.TextBox();
+            this.panel2 = new System.Windows.Forms.Panel();
             this.SuspendLayout();
             // 
             // panel1
             // 
-            this.panel1.Location = new System.Drawing.Point(101, 38);
+            this.panel1.Location = new System.Drawing.Point(113, 38);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(642, 562);
             this.panel1.TabIndex = 64;
@@ -59,7 +60,7 @@
             this.KonecHry.Enabled = false;
             this.KonecHry.Font = new System.Drawing.Font("Microsoft Sans Serif", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.KonecHry.HideSelection = false;
-            this.KonecHry.Location = new System.Drawing.Point(101, 1);
+            this.KonecHry.Location = new System.Drawing.Point(113, -6);
             this.KonecHry.Name = "KonecHry";
             this.KonecHry.ReadOnly = true;
             this.KonecHry.Size = new System.Drawing.Size(642, 38);
@@ -68,11 +69,19 @@
             this.KonecHry.Visible = false;
             this.KonecHry.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
             // 
+            // panel2
+            // 
+            this.panel2.Location = new System.Drawing.Point(12, 38);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(99, 550);
+            this.panel2.TabIndex = 0;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(834, 811);
+            this.Controls.Add(this.panel2);
             this.Controls.Add(this.KonecHry);
             this.Controls.Add(this.panel1);
             this.Name = "Form1";
@@ -87,6 +96,7 @@
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.Timer timer2;
         private System.Windows.Forms.TextBox KonecHry;
+        private System.Windows.Forms.Panel panel2;
     }
 }
 

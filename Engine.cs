@@ -3156,7 +3156,6 @@
         public int ComputersMove(bool white, int totmoves,int depth_base)
         {
 
-            CurrentHash = HashPosition(HashSeed);
             int deph = depth_base;
 
 
@@ -3914,6 +3913,7 @@
 
                 //Printout(BitBoards);
                 ulong h = HashPosition(HashSeed);
+                CurrentHash = HashPosition(HashSeed);
                 //Console.WriteLine("{0:X}", h);
                 //Play(zacina);
                 //return;

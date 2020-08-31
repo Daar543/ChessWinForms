@@ -17,15 +17,17 @@ namespace Sachy_Obrazky
         public Form1()
         {
             InitializeComponent();
+            panel1.Height = panel1.Width;
+            panel2.Height = panel1.Width;
             enj = new Engine();
-            MakeBoard();
+            MakeBoard(false);
             ulong[] BB = enj.Initialize(3);
             temporaryBitBoards = new ulong[12];
             PrintPic(new ulong[12], false);
             PrintPic(BB, false);
             white = ( Engine.Position & (1 << 4)) != 0;
             //PlayGame(enj);
-            timer1.Stop();
+            moveMade = false;
         }
 
 
@@ -38,11 +40,10 @@ namespace Sachy_Obrazky
         Engine enj;
         bool moveMade = true;
         public Button[] ButtonBoard = new Button[8 * 8];
-        private void MakeBoard()
+        private void MakeBoard(bool flipped)
         {
             //creates buttons
-            int size = panel1.Width / 8;
-            panel1.Height = panel1.Width + 100;
+            int size = panel1.Width / 9;
 
             //print buttons
             for (int i = 0; i < 64; i++)
@@ -54,7 +55,10 @@ namespace Sachy_Obrazky
                 panel1.Controls.Add(ButtonBoard[i]);
 
                 //sets location 
-                ButtonBoard[i].Location = new Point((i & 0b111) * size, (i >> 3) * size);
+                ButtonBoard[i].Location = flipped ?
+                    new Point(panel1.Width - (panel1.Width / 9 + (i & 0b111) * size), panel1.Height - (panel1.Height/9 + (i >> 3) * size)) :
+                    new Point(panel1.Width / 9 + (i & 0b111) * size, (i >> 3) * size);
+                    
 
                 //tag is according to index
                 ButtonBoard[i].Tag = i;
@@ -64,6 +68,9 @@ namespace Sachy_Obrazky
 
                 //click handler
                 ButtonBoard[i].Click += Button_Click;
+
+                //coordinates
+                
             }
 
         }
@@ -152,7 +159,7 @@ namespace Sachy_Obrazky
         public int GoNextMove(Engine enj)
         {
             moveMade = false;
-            int x = enj.ComputersMove(white,gamelength, 6);
+            int x = enj.ComputersMove(white,gamelength, 5);
             //int x = enj.PlayersMove(white, gamelength, 0);
             notation = enj.Notation;
             gamelength += 1;
@@ -199,7 +206,7 @@ namespace Sachy_Obrazky
             }
             else if (ButtonBoard[idx].BackColor == allowed)
             { //target square of current piece
-                moveBitboard = (ulong)1 << idx | (ulong) 1<<selectedSquare; //current square will be undercolored
+                moveBitboard = (ulong)1 << selectedSquare; //current square will be undercolored
                 uint nextmove = enj.CompleteMove(selectedPiece, selectedSquare, idx, white);
                 PlayNextMove(enj, nextmove);
                 selectedPiece = -1;
@@ -443,8 +450,17 @@ namespace Sachy_Obrazky
             {
                 return;
             }
+            if (!white)
+            {
+                result = GoNextMove(enj);
+            }
+            else
+            {
+                return;
+            }
             lastTimeRan = System.DateTime.Now.Ticks;
-            result = GoNextMove(enj);
+            
+            
             //continuing = PlayGame(enj) == 0;
             if (result != 0)
             {

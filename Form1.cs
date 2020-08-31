@@ -35,6 +35,7 @@ namespace Sachy_Obrazky
         }
 
         const int StartingPos = 3;
+        const int MinimalMoveDelay = 1000; //1000 ms
         static readonly Color light = Color.LightGray;
         static readonly Color dark = Color.Brown;
         static readonly Color clicked_own = Color.LightGreen;
@@ -210,10 +211,10 @@ namespace Sachy_Obrazky
             //instructions
             var ins = new Button();
             panel2.Controls.Add(ins);
-            ins.Height = size / 2;
+            ins.Height = size ;
             ins.Width = size * 2;
             //ins.Enabled = false;
-            ins.Location = new Point(size * 0, (int)(size * 2.5));
+            ins.Location = new Point(size * 0, (int)(size * 2));
             ins.Text = "Click below to set AI or player (top white, bottom black). Use +- to change difficulty.";
 
             //promotions
@@ -328,8 +329,12 @@ namespace Sachy_Obrazky
             PrintPic(bitbs);
             temporaryBitBoards = bitbs;
             moveMade = true;
-            int y = enj.DetermineResult(white);
-            return y;
+            result = enj.DetermineResult(white);
+            if (result != 0)
+            {
+                Finish();
+            }
+            return result;
         }
 
         void HighlightMove(int move)
@@ -571,8 +576,23 @@ namespace Sachy_Obrazky
             PrintPic(BB);
             white = (Engine.Position & (1 << 4)) != 0;
             //PlayGame(enj);
-            moveMade = false;
+            result = 0;
+            KonecHry.Hide();
+            KonecHry.Text = "";
+            foreach(var b in ButtonBoard)
+            {
+                b.Enabled = true;
+            }
             timer1.Start();
+            if ((white && whitePlayer_AI) || (white is false && blackPlayer_AI))
+            {
+                moveMade = true;
+            }
+            else
+            {
+                moveMade = false;
+            }
+            
         }
         /*protected override CreateParams CreateParams
         {
@@ -698,7 +718,7 @@ namespace Sachy_Obrazky
         private void timer1_Tick(object sender, EventArgs e) //tick time = 10
         {
             //if the last time ran is less than 3 seconds ago, skip the timer tick.
-            if (moveMade is false || lastTimeRan > (System.DateTime.Now.Ticks - 10_000_000)|| !continuing)
+            if (moveMade is false || lastTimeRan > (System.DateTime.Now.Ticks - MinimalMoveDelay*10000)|| !continuing)
             {
                 return;
             }

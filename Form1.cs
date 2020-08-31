@@ -20,7 +20,7 @@ namespace Sachy_Obrazky
             panel1.Height = panel1.Width;
             panel2.Height = panel1.Width;
             enj = new Engine();
-            MakeBoard(false);
+            MakeBoard(true);
             ulong[] BB = enj.Initialize(3);
             temporaryBitBoards = new ulong[12];
             PrintPic(new ulong[12], false);
@@ -40,6 +40,8 @@ namespace Sachy_Obrazky
         Engine enj;
         bool moveMade = true;
         public Button[] ButtonBoard = new Button[8 * 8];
+        TextBox[] rankCoords = new TextBox[8];
+        TextBox[] fileCoords = new TextBox[8];
         private void MakeBoard(bool flipped)
         {
             //creates buttons
@@ -56,7 +58,7 @@ namespace Sachy_Obrazky
 
                 //sets location 
                 ButtonBoard[i].Location = flipped ?
-                    new Point(panel1.Width - (panel1.Width / 9 + (i & 0b111) * size), panel1.Height - (panel1.Height/9 + (i >> 3) * size)) :
+                    new Point(panel1.Width / 9 + ((63-i) & 0b111) * size, ((63-i) >> 3) * size) :
                     new Point(panel1.Width / 9 + (i & 0b111) * size, (i >> 3) * size);
                     
 
@@ -68,10 +70,52 @@ namespace Sachy_Obrazky
 
                 //click handler
                 ButtonBoard[i].Click += Button_Click;
-
-                //coordinates
-                
             }
+            //coordinates - rank
+            for (int i = 0; i < 8; ++i)
+            {
+                rankCoords[i] = new TextBox();
+                var tx = rankCoords[i];
+                panel1.Controls.Add(tx);
+
+                tx.Font = new Font(tx.Font.FontFamily, panel1.Height/16); //for some reason, /16 works pretty well 
+                tx.Width = size/2;
+                tx.Text = (8 - i).ToString();
+                tx.Location = flipped ?
+                    new Point(panel1.Width / 9 - tx.Width, 
+                    (7-i) * size + (size - tx.Height) / 2) : //fixes diff between button height and textbox height
+                    new Point(panel1.Width / 9 - tx.Width, 
+                    i * size + ( size - tx.Height) /2 );
+                tx.Enabled = false;
+                tx.BringToFront();
+            }
+            //coordinates - file (almost the same)
+            for (int i = 0; i < 8; ++i)
+            {
+                fileCoords[i] = new TextBox();
+                var tx = fileCoords[i];
+                panel1.Controls.Add(tx);
+
+                tx.Font = new Font(tx.Font.FontFamily, panel1.Height / 16);
+                tx.Width = size; //in order to fill the whole button-space
+                tx.Text = ((char)('a'+i)).ToString();
+                tx.TextAlign = HorizontalAlignment.Center;
+                tx.Location = flipped ?
+                    new Point((8-i) * size, panel1.Width - panel1.Width / 9) :
+                    new Point((1+i) * size, panel1.Width - panel1.Width / 9) ;
+                tx.Enabled = false;
+                tx.BringToFront();
+            }
+            var refbt = new Button();
+            panel1.Controls.Add(refbt);
+            refbt.Height = size;
+            refbt.Width = size;
+            refbt.BackColor = Color.Yellow;
+            refbt.Location = new Point(0, 0);
+        }
+
+        private void CreateOptions()
+        { //board flipping
 
         }
 

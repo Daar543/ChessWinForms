@@ -1751,7 +1751,10 @@
                 FixPositionHash();
                 return memo;
             }
-
+            else if(move == 0)
+            {
+                return memo;
+            }
             
             if (Bit(move, 5) || Bit(move, 6)) //castling
             {
@@ -3212,7 +3215,7 @@
             {
                 TranspoTable[k] = new Dictionary<uint, Hashentry>();
             }
-            if (player || !player)
+            if (true)
             {
                 NodesSearched = 0;
                 swplay.Start();
@@ -3323,6 +3326,46 @@
 
             player ^= true;
             //end of infinite loop
+            return 0;
+        }
+
+        public int DetermineResult(bool white)
+        {
+            //just tells you if the game should end now or not
+            uint[] mvm;
+            bool end;
+            bool player = white;
+
+            if (InsufMaterial() || NoProgress())
+            {
+                EndDraw();
+                return 1;
+            }
+
+            end = true;
+
+            var possiblemoves = white ? MoveGeneration_White(BitBoards) : MoveGeneration_Black(BitBoards);
+            foreach(uint mov in possiblemoves)
+            {
+                mvm = MakeMove(mov, player);
+                if (Attacked(player ? Wking : Bking, Wmask, Bmask, Block, !player, BitBoards))
+                {
+                    UndoMove(mvm, player);
+                }
+                else
+                {
+                    end = false;
+                    UndoMove(mvm, player);
+                    break;
+                }
+            }
+            
+            if (end)
+            {
+                return EndMate(player);
+            }
+
+            
             return 0;
         }
 
@@ -3867,7 +3910,6 @@
             "7k/8/8/8/8/8/8/K7/ ---- w --", //jen kralove
             "k3b3/1p1p1p1p/1P1P1P1P/8/8/1p1p1p1p/1P1P1P1P/K3B3/ ---- w --", //kompletni blokada
             "8/3q4/1K3k2/r7/6R1/8/8/8/ ---- b --", //nenalezeny mat za cerneho
-            "8/8/8/2p5/2P5/5p2/2K2k2/RQQQqrr1/  KQkq w --", //brani
             "4Q3/2b3pk/P6p/7P/4p3/8/5P1q/5RK1/ ---- w --", //mat nebo pat
             "KR6/8/5k2/7p/8/8/8/8/ ---- w --", //vez proti pesci (musis zabranit opakovani)
             };

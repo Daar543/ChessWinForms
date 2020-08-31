@@ -24,7 +24,7 @@ namespace Sachy_Obrazky
             enj = new Engine();
             MakeBoard(flipped);
             CreateOptions();
-            ulong[] BB = enj.Initialize(5);
+            ulong[] BB = enj.Initialize(3);
             temporaryBitBoards = new ulong[12];
             PrintPic(new ulong[12], false);
             PrintPic(BB, false);
@@ -221,7 +221,8 @@ namespace Sachy_Obrazky
         static int result = 0;
 
 
-
+        bool whitePlayer_AI = true;
+        bool blackPlayer_AI = true;
 
 
 
@@ -229,7 +230,7 @@ namespace Sachy_Obrazky
         public int GoNextMove(Engine enj)
         {
             moveMade = false;
-            int x = enj.ComputersMove(white,gamelength, 5);
+            enj.ComputersMove(white,gamelength, 5);
             //int x = enj.PlayersMove(white, gamelength, 0);
             notation = enj.Notation;
             gamelength += 1;
@@ -238,12 +239,13 @@ namespace Sachy_Obrazky
             PrintPic(bitbs,true);
             temporaryBitBoards = bitbs;
             moveMade = true;
-            return x;
+            int y = enj.DetermineResult(white);
+            return y;
         }
 
         public int PlayNextMove(Engine enj, uint move)
         {
-            int x = enj.PlayersMove(white, gamelength, move);
+            enj.PlayersMove(white, gamelength, move);
             notation = enj.Notation;
             gamelength += 1;
             white ^= true;
@@ -251,7 +253,8 @@ namespace Sachy_Obrazky
             PrintPic(bitbs, true);
             temporaryBitBoards = bitbs;
             moveMade = true;
-            return x;
+            int y = enj.DetermineResult(white);
+            return y;
         }
 
         void Button_Click(object sender, EventArgs e)
@@ -531,7 +534,7 @@ namespace Sachy_Obrazky
             {
                 return;
             }
-            if (!white)
+            if (white && whitePlayer_AI || (white is false && blackPlayer_AI)) 
             {
                 result = GoNextMove(enj);
             }

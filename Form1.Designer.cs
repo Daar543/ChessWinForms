@@ -34,6 +34,7 @@
             this.timer2 = new System.Windows.Forms.Timer(this.components);
             this.KonecHry = new System.Windows.Forms.TextBox();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.panel3 = new System.Windows.Forms.Panel();
             this.SuspendLayout();
             // 
             // panel1
@@ -73,14 +74,22 @@
             // 
             this.panel2.Location = new System.Drawing.Point(12, 38);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(133, 550);
+            this.panel2.Size = new System.Drawing.Size(133, 562);
             this.panel2.TabIndex = 0;
+            // 
+            // panel3
+            // 
+            this.panel3.Location = new System.Drawing.Point(151, 606);
+            this.panel3.Name = "panel3";
+            this.panel3.Size = new System.Drawing.Size(200, 100);
+            this.panel3.TabIndex = 65;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(834, 811);
+            this.Controls.Add(this.panel3);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.KonecHry);
             this.Controls.Add(this.panel1);
@@ -97,6 +106,7 @@
         private System.Windows.Forms.Timer timer2;
         private System.Windows.Forms.TextBox KonecHry;
         private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.Panel panel3;
     }
 }
 

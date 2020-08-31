@@ -18,11 +18,13 @@ namespace Sachy_Obrazky
         {
             InitializeComponent();
             panel1.Height = panel1.Width;
-            panel2.Height = panel1.Width;
+            panel2.Height = panel1.Height;
+            panel3.Width = panel1.Width;
+            panel3.Location = new Point(panel1.Location.X, panel1.Location.Y + panel1.Height);
             enj = new Engine();
             MakeBoard(flipped);
             CreateOptions();
-            ulong[] BB = enj.Initialize(3);
+            ulong[] BB = enj.Initialize(5);
             temporaryBitBoards = new ulong[12];
             PrintPic(new ulong[12], false);
             PrintPic(BB, false);
@@ -37,6 +39,7 @@ namespace Sachy_Obrazky
         static readonly Color clicked_own = Color.LightGreen;
         static readonly Color clicked_opponent = Color.Red;
         static readonly Color allowed = Color.Green;
+        static readonly Color last_move = Color.Yellow;
         ulong[] temporaryBitBoards;
         Engine enj;
         bool moveMade = true;
@@ -44,8 +47,9 @@ namespace Sachy_Obrazky
         public Button[] ButtonBoard = new Button[8 * 8];
         TextBox[] rankCoords = new TextBox[8];
         TextBox[] fileCoords = new TextBox[8];
+        Button[] proms = new Button[4];
 
-        
+
         private void MakeBoard(bool flipped)
         {
             //creates buttons
@@ -138,7 +142,44 @@ namespace Sachy_Obrazky
             sav.Text = "Save notation";
             sav.Location = new Point(size * 0, size * 3);
             sav.Click += Save_Click;
+
+            //promotions
+            for(int i = 0; i < 4; ++i)
+            {
+                proms[i] = new Button();
+                panel3.Controls.Add(proms[i]);
+                proms[i].Height = size;
+                proms[i].Width = size;
+                proms[i].Location = new Point(1+size*(1+i),0);
+                proms[i].Hide();
+                proms[i].Enabled = false;
+                proms[i].Tag = i;
+                proms[i].Click += Promot_Click;
+            }
         }
+
+        void ShowWhitePromotion(int target)
+        {
+            ButtonBoard[target].BackColor = clicked_opponent;
+            for(int i = 0; i < 4; ++i)
+            {
+                ImagePrint(proms[i], 5-i);
+                proms[i].Show();
+                proms[i].Enabled = true;
+            }
+        }
+        void ShowBlackPromotion(int target)
+        {
+            ButtonBoard[target].BackColor = clicked_opponent;
+            for (int i = 0; i < 4; ++i)
+            {
+                ImagePrint(proms[i], 11 - i);
+                proms[i].Show();
+                proms[i].Enabled = true;
+            }
+        }
+
+        
 
         /*protected override void OnPaintBackground(PaintEventArgs e)
         {
@@ -173,7 +214,10 @@ namespace Sachy_Obrazky
         bool white;
         ulong[] bitbs = new ulong[12];
         int selectedSquare;
+        int targetSquare;
         int selectedPiece;
+        int promot;
+
         static int result = 0;
 
 
@@ -217,6 +261,7 @@ namespace Sachy_Obrazky
             PieceClicked((int)button.Tag);
             return;
         }
+
         public void PieceClicked(int idx)
         { //when a piece is clicked, it displays green squares where the piece can move
 
@@ -225,37 +270,60 @@ namespace Sachy_Obrazky
 
             if (ButtonBoard[idx].BackColor == clicked_own)
             { //same piece - cancel the lighting
-                moveBitboard = 0;
                 //ButtonBoard[idx].BackColor = Engine.SqColor(idx) ? light:dark;
+                for (int i = 0; i < 64; ++i)
+                {
+                    ButtonBoard[i].BackColor = Engine.SqColor(i) ? light : dark;
+                }
                 selectedPiece = -1;
                 selectedSquare = -1;
             }
             else if (ButtonBoard[idx].BackColor == allowed)
             { //target square of current piece
-                moveBitboard = (ulong)1 << selectedSquare; //current square will be undercolored
+                targetSquare = idx;
+                if(selectedPiece == 1 && 0 <= idx && idx < 8) //promotion - make a choice for white
+                {
+                    ShowWhitePromotion(idx);
+                    return;
+                }
+                else if (selectedPiece == 7 && 58 <= idx && idx < 64) //promotion - make a choice for white
+                {
+                    ShowBlackPromotion(idx);
+                    return;
+                }
                 uint nextmove = enj.CompleteMove(selectedPiece, selectedSquare, idx, white);
                 PlayNextMove(enj, nextmove);
+
+                for (int i = 0; i < 64; ++i)
+                {
+                    ButtonBoard[i].BackColor = Engine.SqColor(i) ? light : dark;
+                }
+
+                ButtonBoard[selectedSquare].BackColor = last_move;
+                ButtonBoard[idx].BackColor = last_move;
                 selectedPiece = -1;
                 selectedSquare = -1;
+                return;
             }
             else
             { //new piece
                 moveBitboard = enj.DisplayLegalMoves(idx, white);
                 selectedSquare = idx;
                 selectedPiece = enj.GetPiece(idx);
-            }
-            ulong pointr = 1;
-            for(int i = 0; i < 64; ++i)
-            {
-                if((pointr & moveBitboard) != 0) //if legal
+                ulong pointr = 1;
+                for (int i = 0; i < 64; ++i)
                 {
-                    ButtonBoard[i].BackColor = Color.Green;
+                    if ((pointr & moveBitboard) != 0) //if legal
+                    {
+                        ButtonBoard[i].BackColor = Color.Green;
+                    }
+                    else
+                    { //set it as default
+                        ButtonBoard[i].BackColor = Engine.SqColor(i) ? light : dark;
+                    }
+                    pointr <<= 1;
                 }
-                else
-                { //set it as default
-                    ButtonBoard[i].BackColor = Engine.SqColor(i) ? light:dark;
-                }
-                pointr <<= 1;
+            
             }
         }
 
@@ -309,6 +377,32 @@ namespace Sachy_Obrazky
         void Save_Click(object sender, EventArgs e)
         {
             Engine.RewritePartia("partie.txt");
+            return;
+        }
+
+        void Promot_Click(object sender, EventArgs e)
+        {
+            var b = (Button)sender;
+            promot = (int)b.Tag;
+            uint nextmove = enj.CompleteMove(selectedPiece, selectedSquare, targetSquare, white);
+            nextmove |= ((uint)promot << 3);
+            PlayNextMove(enj, nextmove);
+            for (int i = 0; i < 64; ++i)
+            {
+                ButtonBoard[i].BackColor = Engine.SqColor(i) ? light : dark;
+            }
+
+            ButtonBoard[selectedSquare].BackColor = last_move;
+            ButtonBoard[targetSquare].BackColor = last_move;
+            selectedPiece = -1;
+            selectedSquare = -1;
+            targetSquare = -1;
+
+            foreach(var p in proms)
+            {
+                p.Enabled = false;
+                p.Hide();
+            }
             return;
         }
         /*protected override CreateParams CreateParams
@@ -377,97 +471,6 @@ namespace Sachy_Obrazky
                         //ButtonBoard[n].BackColor = PieceColors[k];
                         ImagePrint(ButtonBoard[n], k);
                         //ButtonBoard[n].BringToFront();
-                        /*switch (k)
-                        {
-                            
-                            /*case 0:
-                                ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Wking_Paint);
-                                void Wking_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
-                                {
-                                    PrintPieceImage(ButtonBoard[n], "Wking_light.png", e);
-                                }
-                                break;
-                            case 1:
-                                ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Wpawn_Paint);
-                                void Wpawn_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
-                                {
-                                    PrintPieceImage(ButtonBoard[n], "Wpawn_light.png", e);
-                                }
-                                break;
-                            case 2:
-                                /*ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Wknight_Paint);
-                                void Wknight_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
-                                {
-                                    PrintPieceImage(ButtonBoard[n], "Wknight_light.png", e);
-                                }
-                                break;
-                                //Button b = ButtonBoard[n];
-                                ImagePrint(ButtonBoard[n], 2);
-                                break;
-                                /*case 3:
-                                    ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Wbishop_Paint);
-                                    void Wbishop_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
-                                    {
-                                        PrintPieceImage(ButtonBoard[n], "Wbishop_light.png", e);
-                                    }
-                                    break;
-                                case 4:
-                                    ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Wrook_Paint);
-                                    void Wrook_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
-                                    {
-                                        PrintPieceImage(ButtonBoard[n], "Wrook_light.png", e);
-                                    }
-                                    break;
-                                case 5:
-                                    ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Wqueen_Paint);
-                                    void Wqueen_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
-                                    {
-                                        PrintPieceImage(ButtonBoard[n], "Wqueen_light.png", e);
-                                    }
-                                    break;
-                                case 6:
-                                    ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Bking_Paint);
-                                    void Bking_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
-                                    {
-                                        PrintPieceImage(ButtonBoard[n], "Bking_light.png", e);
-                                    }
-                                    break;
-                                case 7:
-                                    ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Bpawn_Paint);
-                                    void Bpawn_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
-                                    {
-                                        PrintPieceImage(ButtonBoard[n], "Bpawn_light.png", e);
-                                    }
-                                    break;
-                                case 8:
-                                    ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Bknight_Paint);
-                                    void Bknight_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
-                                    {
-                                        PrintPieceImage(ButtonBoard[n], "Bknight_light.png", e);
-                                    }
-                                    break;
-                                case 9:
-                                    ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Bbishop_Paint);
-                                    void Bbishop_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
-                                    {
-                                        PrintPieceImage(ButtonBoard[n], "Bbishop_light.png", e);
-                                    }
-                                    break;
-                                case 10:
-                                    ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Brook_Paint);
-                                    void Brook_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
-                                    {
-                                        PrintPieceImage(ButtonBoard[n], "Brook_light.png", e);
-                                    }
-                                    break;
-                                case 11:
-                                    ButtonBoard[n].Paint += new System.Windows.Forms.PaintEventHandler(Bqueen_Paint);
-                                    void Bqueen_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
-                                    {
-                                        PrintPieceImage(ButtonBoard[n], "Bqueen_light.png", e);
-                                    }
-                                    break;
-                        }*/
                         break;
                     }
                     
@@ -552,7 +555,12 @@ namespace Sachy_Obrazky
             Controls.Add(KonecHry);
             KonecHry.Show();
             KonecHry.BringToFront();
+            foreach(var b in ButtonBoard)
+            {
+                b.Enabled = false;
+            }
         }
+
         private void timer2_Tick(object sender, EventArgs e)
         {
 

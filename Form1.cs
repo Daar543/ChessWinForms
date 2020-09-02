@@ -159,7 +159,7 @@ namespace Sachy_Obrazky
             panel2.Controls.Add(aiw);
             aiw.Height = size/2;
             aiw.Width = size/2;
-            aiw.Text = "AI\n"+intelWhite.ToString();
+            aiw.Text = "AI"+intelWhite.ToString();
             aiw.Location = new Point(size * 0, size * 3);
             aiw.Tag = 0;
             aiw.Click += AISet_Click;
@@ -168,7 +168,7 @@ namespace Sachy_Obrazky
             panel2.Controls.Add(aib);
             aib.Height = size / 2;
             aib.Width = size / 2;
-            aib.Text = "AI\n" + intelBlack.ToString();
+            aib.Text = "AI" + intelBlack.ToString();
             aib.Location = new Point(size * 0, (int)(size * 3.5));
             aib.Tag = 1;
             aib.Click += AISet_Click;
@@ -207,15 +207,6 @@ namespace Sachy_Obrazky
             plb.Location = new Point(size * 1, (int)(size * 3.5));
             plb.Tag = 1;
             plb.Click += AsPlayer_Click;
-
-            //instructions
-            var ins = new Button();
-            panel2.Controls.Add(ins);
-            ins.Height = size ;
-            ins.Width = size * 2;
-            //ins.Enabled = false;
-            ins.Location = new Point(size * 0, (int)(size * 2));
-            ins.Text = "Click below to set AI or player (top white, bottom black). Use +- to change difficulty.";
 
             //promotions
             for (int i = 0; i < 4; ++i)

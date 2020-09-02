@@ -1027,7 +1027,7 @@
                 }
             }
             ulong p = (ulong)1 << to; //bit on the target square
-            if ((p & Bmask) != 0 || ep) //capture, duh
+            if ((p & Bmask) != 0 || ep) //capture
             {
                 flags |= 1 << 7;
                 for (int i = 7; i < 12; ++i) //gotta scan through black bitboards and figure out the type of captured piece
@@ -1255,7 +1255,7 @@
                 
             
             ulong p = (ulong)1 << to;
-            if ((p & Wmask) != 0 || ep) //capture, duh
+            if ((p & Wmask) != 0 || ep) //capture, 
             {
                 
                 flags |= 1 << 7;

@@ -1,0 +1,10 @@
+C:\Users\Frantisek\source\repos\Sachy_Obrazky\Sachy_Obrazky\bin\Release\Sachy_Obrazky.exe.config
+C:\Users\Frantisek\source\repos\Sachy_Obrazky\Sachy_Obrazky\bin\Release\Sachy_Obrazky.exe
+C:\Users\Frantisek\source\repos\Sachy_Obrazky\Sachy_Obrazky\bin\Release\Sachy_Obrazky.pdb
+C:\Users\Frantisek\source\repos\Sachy_Obrazky\Sachy_Obrazky\obj\Release\Sachy_Obrazky.csprojAssemblyReference.cache
+C:\Users\Frantisek\source\repos\Sachy_Obrazky\Sachy_Obrazky\obj\Release\Sachy_Obrazky.Form1.resources
+C:\Users\Frantisek\source\repos\Sachy_Obrazky\Sachy_Obrazky\obj\Release\Sachy_Obrazky.Properties.Resources.resources
+C:\Users\Frantisek\source\repos\Sachy_Obrazky\Sachy_Obrazky\obj\Release\Sachy_Obrazky.csproj.GenerateResource.cache
+C:\Users\Frantisek\source\repos\Sachy_Obrazky\Sachy_Obrazky\obj\Release\Sachy_Obrazky.csproj.CoreCompileInputs.cache
+C:\Users\Frantisek\source\repos\Sachy_Obrazky\Sachy_Obrazky\obj\Release\Sachy_Obrazky.exe
+C:\Users\Frantisek\source\repos\Sachy_Obrazky\Sachy_Obrazky\obj\Release\Sachy_Obrazky.pdb

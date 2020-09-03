@@ -1,0 +1,80 @@
+This project has been made to allow players play chess against AI, and against each other, or AI against AI.
+The project consists mostly of two parts: the Form, which is necessary for Winforms apps, and the class "Engine" - which was originally made for console chess application.
+
+I. Engine
+
+
+1) Purpose
+
+The "Engine" takes care of these things:
+
+- creating state of new game
+- tracking pieces' positions and other aspects of the board (e.g. which side is to move)
+- recording notation of current game
+- game rules (all possible moves, end of game...)
+- "thinking" of AI 
+
+2) Important variables
+
+The engine is able to track only one state of the board. This is being done by the following variables:
+
+a) ulong[] BitBoards
+
+A bitboard is a term used in chess programming to represent one flag for all squares on a chess board with use of one integer. 
+Since ulong variable has 64 bits as well as chess board has squares, each square can be represented by one bit. 
+If a bit on a given position is set, the flag is active. This can be easily checked by bit operations (see method Bit()).
+
+The array BitBoards consists of 12 such bitboards,
+with each index representing one piece:
+
+0-5: white
+0 - king
+1 - pawn
+2 - knight
+3 - bishop
+4 - rook
+5 - queen
+6-11: black
+6 - king
+7 - pawn
+8 - knight
+9 - bishop
+10 - rook
+11 - queen
+
+This allows to easily check if a piece is present on given square: 
+if we want to check if a white rook is present of square b7 (which has index of 9), then we check if 9th LSb in BitBoards[4] is set.
+
+b) ulong Wmask, ulong Bmask, ulong Block
+
+Wmask is a disjunction of white pieces' bitboards, Bmask a disjunction of black pieces' bitboards and Block is a disjunction of Wmask and Bmask.
+
+These variables can quickly speed up searching. For example, if we want to know if any piece is present on square #6,
+then instead of looping through all pieces' bitboards, we can first check the 6th bit in Block, then Wmask or Bmask. In worst case, we will need to do 9 bit checks (black queen), but if a piece is not present, we will need to do only 1 bit check.
+
+All of these variables must be updated as soon as the BitBoards[] themselves are updated.
+
+c) int Position
+
+While knowing location of all pieces on the board gives us lots of information (and in some cases, complete information), the position mostly requires some pieces of external information.
+Below are shown the aspects of position which are kept in this variable, with corresponding bits (LSb first):
+
+Castling rights (c8, g8, c1, g1): 0-3
+Player currently to move (1 white, 0 black): 4
+Square behind pawn which had just made a double-step (en passant square): 8-13
+Total half-moves (not implemented yet): 14-23
+Half-moves without piece being captured or pawn moving: 24-31
+
+d) ulong CurrentHash
+
+This variable is used for detecting repeated positions: one purpose is to detect threefold repetition 
+(not implemented due to analysis issues), the other is to implement Transposition Table in order to improve speed of depth analysis.
+
+Every position could be uniquely encoded in this way: concatenate BitBoards and Position, leading to 800-bit integer. 
+This encoding would hold little value to hash tables due to its size. The idea of hashing in this project (called Zobrist Hashing) is to 
+generate a random ulong value for every bit, and then xor values where the bit is equal to 1.
+
+e) ulong HashSeed, const int randomSeed
+
+
+

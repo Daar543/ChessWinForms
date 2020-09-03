@@ -223,22 +223,13 @@ namespace Sachy_Obrazky
             }
         }
 
-        void ShowWhitePromotion(int target)
+        void ShowPromotion(int target, bool white)
         {
             ButtonBoard[target].BackColor = clicked_opponent;
+            promot = -2;
             for(int i = 0; i < 4; ++i)
             {
-                ImagePrint(proms[i], 5-i);
-                proms[i].Show();
-                proms[i].Enabled = true;
-            }
-        }
-        void ShowBlackPromotion(int target)
-        {
-            ButtonBoard[target].BackColor = clicked_opponent;
-            for (int i = 0; i < 4; ++i)
-            {
-                ImagePrint(proms[i], 11 - i);
+                ImagePrint(proms[i], (white?5:11)-i);
                 proms[i].Show();
                 proms[i].Enabled = true;
             }
@@ -281,7 +272,7 @@ namespace Sachy_Obrazky
         int selectedSquare;
         int targetSquare;
         int selectedPiece;
-        int promot;
+        int promot = -1;
 
         static int result = 0;
 
@@ -362,6 +353,10 @@ namespace Sachy_Obrazky
             //if the same piece h.b. already clicked, return the buttons back to normal;
             ulong moveBitboard;
 
+            if(promot!=-1)
+            {
+                return;
+            }
             if (ButtonBoard[idx].BackColor == clicked_own)
             { //same piece - cancel the lighting
                 //ButtonBoard[idx].BackColor = Engine.SqColor(idx) ? light:dark;
@@ -377,12 +372,12 @@ namespace Sachy_Obrazky
                 targetSquare = idx;
                 if(selectedPiece == 1 && 0 <= idx && idx < 8) //promotion - make a choice for white
                 {
-                    ShowWhitePromotion(idx);
+                    ShowPromotion(idx,true);
                     return;
                 }
-                else if (selectedPiece == 7 && 58 <= idx && idx < 64) //promotion - make a choice for white
+                else if (selectedPiece == 7 && 58 <= idx && idx < 64) //promotion - make a choice for black
                 {
-                    ShowBlackPromotion(idx);
+                    ShowPromotion(idx,false);
                     return;
                 }
                 uint nextmove = enj.CompleteMove(selectedPiece, selectedSquare, idx, white);
@@ -491,6 +486,7 @@ namespace Sachy_Obrazky
             selectedPiece = -1;
             selectedSquare = -1;
             targetSquare = -1;
+            promot = -1;
 
             foreach(var p in proms)
             {
@@ -561,7 +557,7 @@ namespace Sachy_Obrazky
             //just start the game, everything else is initialized
             timer1.Stop();
             enj = new Engine();
-            ulong[] BB = enj.Initialize(3);
+            ulong[] BB = enj.Initialize(StartingPos);
             temporaryBitBoards = new ulong[12];
             PrintPic(new ulong[12]);
             PrintPic(BB);

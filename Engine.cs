@@ -1112,7 +1112,7 @@
             //ep
 
             //sw.Start();
-            int epsq = (Position >> 8) & 0b111111;
+            int epsq = (Position >> 8) & 0b00111111;
             if ((epsq != 0) && Bit(BitBoards[BB_p], epsq + 8))
             {
                 int[] eps = EPGen(epsq, true);
@@ -1737,8 +1737,8 @@
             FixPositionHash();
 
             uint piece = (move >> 24) & ((1 << 4) - 1);
-            int blankmoves = (Position >> 24) & (0b00_111111); //bits 2-7 (MSB) signalize moves which do not progress
-            Position &= ~(0b00_111111 << 24); //nullifies the blank move count
+            int blankmoves = (Position >> 24); //bits 2-7 (MSB) signalize moves which do not progress
+            Position &= ~(0b11111111 << 24); //nullifies the blank move count
             if (piece == 1 || piece == 7)
                 blankmoves = 0;
             else
@@ -1751,11 +1751,8 @@
                 FixPositionHash();
                 return memo;
             }
-            else if(move == 0)
-            {
-                return memo;
-            }
-            
+
+
             if (Bit(move, 5) || Bit(move, 6)) //castling
             {
                 if (Bit(move, 5))//qside

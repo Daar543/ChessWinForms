@@ -34,7 +34,7 @@ namespace Sachy_Obrazky
             moveMade = false;
         }
 
-        const int StartingPos = 9;
+        const int StartingPos = 5;
         const int MinimalMoveDelay = 100; //1000 ms
         static readonly Color light = Color.LightGray;
         static readonly Color dark = Color.Brown;
@@ -125,7 +125,7 @@ namespace Sachy_Obrazky
             panel3.Location = new Point(panel1.Location.X + panel1.Width / 9, panel1.Location.Y+panel1.Height);
             //endgame panel
             panel3.Controls.Add(KonecHry);
-            KonecHry.Location = new Point(0, panel3.Height - KonecHry.Height);
+            KonecHry.Location = new Point(panel3.Location.X, panel3.Location.Y + panel3.Height - KonecHry.Height);
             KonecHry.Width = panel3.Width;
             KonecHry.Show();
             /*var refbt = new Button();
@@ -234,7 +234,7 @@ namespace Sachy_Obrazky
                 panel3.Controls.Add(proms[i]);
                 proms[i].Height = size;
                 proms[i].Width = size;
-                proms[i].Location = new Point(1+size*(1+i),0);
+                proms[i].Location = new Point(size*(i),0);
                 proms[i].Hide();
                 proms[i].Enabled = false;
                 proms[i].Tag = i;
@@ -244,6 +244,9 @@ namespace Sachy_Obrazky
             //analysis box
             panel3.Controls.Add(Analys);
             Analys.Location = new Point(panel3.Width / 2, 0);
+            Analys.Width = panel3.Width / 2;
+            Analys.BringToFront();
+            Analys.Multiline = true;
         }
 
         void ShowPromotion(int target, bool white)
@@ -315,6 +318,8 @@ namespace Sachy_Obrazky
             string textforbox = "";
             for(int i = 0; i < enj.pvmoves.Length; ++i)
             {
+                if (enj.pvmoves[i] == "Ka8-a8")
+                    break;
                 textforbox += enj.pvmoves[i] + " "; 
             }
             Analys.Text = textforbox;

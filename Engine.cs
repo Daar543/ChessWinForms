@@ -3139,7 +3139,7 @@
                 swplay.Start();
 
                 // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, false); //no random
-                ab = AlphaBeta_Rewritten(0, deph /*+ (player ? 0 : -1)*/, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, true); //both random
+                ab = AlphaBeta(0, deph /*+ (player ? 0 : -1)*/, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, true); //both random
                                                                                                                                                 // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? true : false); //white random
                                                                                                                                                 // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? false : true); //black random
 
@@ -3559,21 +3559,8 @@
                 // return Evaluation() * (white ? 1 : -1);
             }
 
-            /*TimeSpan g;
-            TimeSpan gs;
-            TimeSpan gss;*/
-
-
-            //stops.Start();
             uint[] mvs = white ? MoveGeneration_White(BitBoards).ToArray() : MoveGeneration_Black(BitBoards).ToArray();
-            //g = stops.Elapsed;
-            //Shuffle(mvs);
-            //gs = stops.Elapsed;
             SortMoves(mvs);
-            //gss = stops.Elapsed;
-            //Console.WriteLine("Elapsed generation: {0}", g);
-            //Console.WriteLine("Elapsed generation+shuffling: {0}", gs);
-            //Console.WriteLine("Elapsed generation+shuffling+sorting: {0}", gss);
 
             //stops.Reset();
 
@@ -3605,34 +3592,17 @@
                 }
                 end = false;
 
-                //ss.Stop();
-
                 curreval = -AlphaBeta(currdepth + 1, maxdepth, -beta, -alpha, !white, line, evaluation_system);
 
-                //ss.Start();
-
+                //returns back
                 UndoMove(mvm, white);
-                /*int ev1 = Evaluation();
-                if (checkito != ev1)
-                {
-                    Console.WriteLine("Error in retracting");
-                    Console.ReadLine();
-                    Printout(BitBoards);
-                    mvm = MakeMove(donemove, white);
-                    Printout(BitBoards);
-                    UndoMove(mvm, white);
-                    Printout(BitBoards);
-                }*/
 
+                //beta cutoff - opponent can force worse result for us
                 if (curreval >= beta)
                 {
-
-                    /*ss.Stop();
-                    Console.WriteLine("{0}. {1}", NodesSearched, ss.Elapsed);
-                    ss.Reset();*/
-
                     return beta;
                 }
+                //alpha increase - we have reached better result than out previous moves did
                 if (curreval > alpha)
                 {
 
@@ -3663,7 +3633,7 @@
                 ss.Reset();*/
                 return -EndMateEval(white, 1 + currdepth);
             }
-            if (InsufMaterial())
+            if (InsufMaterial()||NoProgress())
             {
                 /*ss.Stop();
                 Console.WriteLine("{0}. {1}", NodesSearched, ss.Elapsed);

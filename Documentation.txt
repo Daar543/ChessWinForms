@@ -18,6 +18,8 @@ The "Engine" takes care of these things:
 
 The engine is able to track only one state of the board. This is being done by the following variables:
 
+2A) Board state
+
 a) ulong[] BitBoards
 
 A bitboard is a term used in chess programming to represent one flag for all squares on a chess board with use of one integer. 
@@ -74,7 +76,122 @@ Every position could be uniquely encoded in this way: concatenate BitBoards and 
 This encoding would hold little value to hash tables due to its size. The idea of hashing in this project (called Zobrist Hashing) is to 
 generate a random ulong value for every bit, and then xor values where the bit is equal to 1.
 
-e) ulong HashSeed, const int randomSeed
+e) ulong[] HashSeed, const int randomSeed
 
+HashSeed is an array of 784 ulongs, used for Zobrist Hashing (see CurrentHash). 
+12*64 numbers are used for representing every piece-square combinations, 1 number for beginning player, 4 numbers for castling rights,
+and 8 numbers for file where en-passant can take place in the next move.
 
+Although the numbers in array are generated randomly, the seed is constant - in order to have constant hashing at every launch.
 
+f) int Wking, int Bking
+
+As there can be only one king, it's simple to track his location by one integer rather than ulong. This comes in handy when
+there is need to check for checking/mate, as there is no need to loop through king's bitboard.
+
+g) bool white
+
+Many function are based on the fact whether a white or black player is currently making move, so this variable is used very often.
+
+2B) Movement of pieces, board representation
+
+Indices in normal board representation starts at square a8 and procceeds left-to-right, therefore directions are as following:
+west: -1
+east: +1
+north: -8
+south: +8
+
+Indices of squares:
+a8: 0
+b8: 1
+h8: 7
+a1: 56
+h1: 63
+
+a) int[] Indices, int[] Deinds
+
+Array Indices is made for converting "normal" indices to so-called 0x88 representation.
+In this representation, south/north movement changes index by +/- 16. This results in two things:
+
+- maximum value, h1 square, is equal to 119.
+- if (index & 0x88) is not zero, a square with this index doesn't exist on board.
+
+The advantage of this representation is that it's easier to check whether a piece has moved outside the board,
+ as it requires one bit operation and equality statement rather than 4 comparisons.
+
+Deinds returns 0x88 representation into normal one. Invalid squares have value of -1.
+This cannot be used to detect all invalid squares, as some of them can have negative value or higher value than 119.
+
+b) int[] Directions_King (Knight, Rook, Bishop, Queen, Pawn_White, Pawn_Black)
+
+These integers represent a change of square's index (in 0x88 representation, see 2B/a Indices) if a piece moves by 1 point in the given directions. 
+King, knight and queen can move in 8 directions, while rook and bishop can move in 4 directions. Pawns have specific movement.
+
+2C) Evaluation
+
+Unless the AI or player can see a forced mate or draw, 
+it needs to have a way to determine if a position at the end of calculation is advantageous. Following variables employ this purpose:
+
+a) int[] Values
+
+Classic "chess school" values of pieces are as following:
+
+King - practical infinity 
+Pawn - 1
+Knight - 3
+Bishop - 3 
+Rook - 5
+Queen - 9
+
+In order to reach more precision by next evaluation factors, I have multiplied the values by 100 (to avoid floats)
+ and also increased the value of bishop and knight to discourage disadvantageous exchanges (e.g. knight+bishop > rook+pawn):
+
+King - 65535
+Pawn - 100
+Knight - 320
+Bishop - 330
+Rook - 500
+Queen - 900
+
+As both sides have king, its material value is not considered in the evaluation functions.
+
+b) int[][]Posit_Values
+
+To every piece is assigned additional value, based on the currently occupied square. 
+The values are based on mobility on empty board, and also how the pieces are often threatened/blocked in games. 
+For example, knights are encouraged to be developed almost immediately, whereas pawns are advised to stay in back. 
+Therefore the computer tries to move first knights, and move with pawns only to enable other pieces.
+
+King has two separate values, one for early and middle game, the other one for late game (based on current material).
+
+c) uint[] Priorities
+
+If a capture is available, the computer first analyzes the capture made by piece with highest priority (which is the weaker one).
+This is based on normal principle of piece trading - usually capturing pieces can be recaptured, 
+therefore captures by pawn are usually the strongest captures of them all  
+(Searching best moves first increases efficiency of search algorithm).
+
+d) int depth_base, int deph
+
+These variables tell AI how deep should it search, before ending with unlimited "quiescence" search. 
+Variable depth_base is assigned to the engine at start of game, while deph is the actual depth -
+- it increases once material in position drops under certain value.
+
+In case of lower material, there are usually less moves to be made, therefore the search is faster, and therefore computer can spend 
+its assigned time by searching deeper.
+
+Additionally, endgames require very precise calculation, and player can often see further than the computer, if moves are forced.
+
+e) const int blacksquares, whitesquares
+
+This is a constant for bitboard of blacksquares (black squares have a set bit) or whitesquares. 
+Used when determining if bishops are on the same color (as they move only diagonally, so the color stays).
+
+3) Functions
+
+First of all, I would like to apologize for inconsistencies in "early" functions, where I used variables Wmask, Bmask... as parameters.
+The functions could use some cleaning, but they work.
+
+3A) Generating moves
+
+a) 

@@ -194,6 +194,7 @@
             BB_b = 9,
             BB_r = 10,
             BB_q = 11;
+        public static readonly char[] pieces = new char[12] { 'K', 'P', 'N', 'B', 'R', 'Q', 'k', 'p', 'n', 'b', 'r', 'q' };
 
         static ulong Wmask; //1 bit for every white piece on given square
         static ulong Bmask; //same, for black
@@ -228,6 +229,7 @@
         //public static ulong[] Bitboards = new ulong[12];
         static ulong Land_Moves(int[] Directions, int index, ulong WhiteBoard, ulong BlackBoard, ulong Block, bool white)
         {
+            //generates moves in every direction, and then zeroes the one which would land on piece of the same color
             ulong posmov = 0;
             int p;
             int di;
@@ -235,17 +237,13 @@
             {
                 p = Indices[index];
                 p += i;
-                if ((p & 0x88) != 0)
+                if ((p&0x88)!=0) //out of bounds
                     continue;
                 di = Deinds[p];
                 posmov |= (((ulong)1) << di);
             }
-            ulong w = ~WhiteBoard;
-            ulong b = ~BlackBoard;
-            if (white)
-                posmov &= w;
-            else
-                posmov &= b;
+
+            posmov &= white ? (~WhiteBoard) : (~BlackBoard);
             return (posmov);
         }
 
@@ -258,8 +256,7 @@
                 posmov &= (~BlackBoard);
             return posmov;
         }*/
-        int[] AllPieces_White = new int[32];
-        int[] AllPieces_Black = new int[32];
+
         static void Remask()
         {
             Wmask = BitBoards[0] | BitBoards[1] | BitBoards[2] | BitBoards[3] | BitBoards[4] | BitBoards[5];
@@ -278,7 +275,7 @@
                 while (true) //moves into one direction until it falls off or crashes
                 {
                     p += i;
-                    if ((p & 0x88) != 0)
+                    if ((p&0x88)!=0) //out of bounds
                         break;
                     di = Deinds[p];
                     posmov |= (((ulong)1) << di);
@@ -287,10 +284,7 @@
                 }
 
             }
-            if (white)
-                posmov &= (~WhiteBoard);
-            else
-                posmov &= (~BlackBoard);
+            posmov &= white ? (~WhiteBoard) : (~BlackBoard);
             return (posmov);
         }
 
@@ -306,7 +300,7 @@
             {
                 p = Indices[index];
                 p += i;
-                if ((p & 0x88) != 0)
+                if ((p&0x88)!=0)
                     continue;
                 di = Deinds[p];
                 posmov |= (((ulong)1) << di);
@@ -357,7 +351,7 @@
                 while (true) //moves into one direction until it falls off or crashes
                 {
                     p += i;
-                    if ((p & 0x88) != 0)
+                    if ((p&0x88)!=0)
                         break;
                     di = Deinds[p];
 
@@ -1427,7 +1421,7 @@
             sw.Reset();
             return moves;
         }
-        public static readonly char[] pieces = new char[12] { 'K', 'P', 'N', 'B', 'R', 'Q', 'k', 'p', 'n', 'b', 'r', 'q' };
+        
 
         public static bool Bit(ulong bitboard, int Pos)
         {

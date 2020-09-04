@@ -385,10 +385,11 @@
         }
         //public static ulong[] AllKingMoves = new ulong[64];
 
-        static ulong[] AllKingMoves = initKingMoves();
+        static ulong[] AllKingMoves = initKingMoves(); //moves on empty board
 
         static ulong[] initKingMoves()
         {
+            //efficient generation by for loop
             int n = 64;
             var result = new ulong[n];
 
@@ -415,10 +416,11 @@
         }
         //public static ulong[] AllKnightMoves = new ulong[64];
 
-        static ulong[] AllKnightMoves = initKnightMoves();
+        static ulong[] AllKnightMoves = initKnightMoves(); //moves on empty board
 
         static ulong[] initKnightMoves()
         {
+            //efficient generation by for loop
             int n = 64;
             var result = new ulong[n];
 

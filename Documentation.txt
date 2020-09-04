@@ -127,6 +127,13 @@ b) int[] Directions_King (Knight, Rook, Bishop, Queen, Pawn_White, Pawn_Black)
 These integers represent a change of square's index (in 0x88 representation, see 2B/a Indices) if a piece moves by 1 point in the given directions. 
 King, knight and queen can move in 8 directions, while rook and bishop can move in 4 directions. Pawns have specific movement.
 
+c) ulong[] AllKingMoves, ulong[] AllKnightMoves
+
+Both of these represent bitboard of all possible moves which can be made by king or knight on empty board, 
+based only on the initial square. 
+If I need to know possible pseudolegal moves for current position, 
+I need only to exclude squares where pieces of the same color (as the moving piece) are.
+
 2C) Evaluation
 
 Unless the AI or player can see a forced mate or draw, 
@@ -200,8 +207,77 @@ The general algoritm is:
 	- Loop through all distances in this direction
 		- If outside board, break
 		- Else add the target square into bitboard
+		- If there is a piece on this square, break for this direction¨
 - Negate the bitboard by bitboards of pieces of the same color
 
 a) ulong Land_Moves(int[] Directions, int index, ulong WhiteBoard, ulong BlackBoard, ulong Block, bool white)
 
-This generates possible moves for "landing" pieces, which are king and knight.
+This generates a bitboard of possible moves for "landing" pieces, which are king and knight.
+If one of the target squares for this piece is blocked, it has no impact on other squares where this piece can move. 
+
+b) ulong Ray_Moves(int[] Directions, int index, ulong WhiteBoard, ulong BlackBoard, ulong Block, bool white)
+
+This generates a bitboard of possible moves for "ray" pieces, which can move by more squares in one direction (bishop, rook, queen).
+If moves are generated in one direction, then if a square is blocked, all other squares past it will be unavailable 
+(as pieces cannot jump).
+
+c) ulong Land_Captures(int[] Directions, int index, ulong WhiteBoard, ulong BlackBoard, ulong Block, bool white)
+ulong Land_Captures_Premade(ulong[] table, int index, ulong WhiteBoard, ulong BlackBoard, ulong Block, bool white)
+
+This function generates only captures, and could be used e.g. when determining if king is in check.
+Generation is the same as for all moves, the only difference is that squares where no piece of the opposite color resides are excluded.
+
+However, if I exclude the two last and-operations, the bitboard will be based only on the initial square. 
+That's what the function Land_Captures_Premade is made for. The ulong[]table is either of the AllKingMoves or AllKnightMoves (see 2B/c)
+	
+d) ulong Ray_Captures(int[] Directions, int index, ulong WhiteBoard, ulong BlackBoard, ulong Block, bool white)
+
+This function generates only captures for bishop, rook or queen. 
+Difference between this function and function Ray_Moves is that if square is not blocked, 
+it is not added to the bitboard of possible captures (as there is no piece to be taken).
+
+At the end of function, final filtering is being made - 
+squares with the pieces of same color are excluded, squares with pieces of opposite color are included.
+
+e) ulong FreeKingMoves(int index), ulong FreeKnightMoves(int index)
+
+These generate bitboard for all possible moves of king/knight on empty board, at the given #index square.
+
+f) ulong[] initKingMoves(), ulong[] initKnightMoves()
+
+Efficient generation of arrays AllKingMoves and AllKnightMoves, respectively.
+
+g) ulong Bishop_Moves(int index, ulong WhiteBoard, ulong BlackBoard, ulong Block, bool white),
+ulong Rook_Moves(int index, ulong WhiteBoard, ulong BlackBoard, ulong Block, bool white),
+ulong Queen_Moves(int index, ulong WhiteBoard, ulong BlackBoard, ulong Block, bool white)
+
+All of these functions call function Ray_Moves with specific direction for each piece, 
+producing a bitboard of pseudolegal moves for these pieces.
+
+h) ulong King_Moves(int index, ulong WhiteBoard, ulong BlackBoard, ulong Block, bool white),
+ulong Knight_Moves(int index, ulong WhiteBoard, ulong BlackBoard, ulong Block, bool white)
+
+These functions call Land_Moves with direction for king or knight, respectively, 
+producing a bitboard of pseudolegal moves for these pieces.
+This function is not used in the generation itself (see MovesKing, MovesKnight)
+
+i) ulong MovesBishop(int index, ulong WhiteMask, ulong BlackMask, ulong Block, bool white),
+ulong MovesRook(int index, ulong WhiteMask, ulong BlackMask, ulong Block, bool white),
+ulong MovesQueen(int index, ulong WhiteMask, ulong BlackMask, ulong Block, bool white)
+
+A rewriting of functions Bishop_Moves, Rook_Moves, Queen_Moves for the sake of consistency (see MovesKing, MovesKnight).
+
+j) ulong MovesKing(int index, ulong WhiteMask, ulong BlackMask, ulong Block, bool white),
+ulong MovesKnight(int index, ulong WhiteMask, ulong BlackMask, ulong Block, bool white)
+
+Unlike MovesBishop,MovesRook or MovesQueen, these functions use static arrays AllKingMoves or AllKnightMoves for move generation.
+
+k) ulong CapturesKing(int index, ulong WhiteMask, ulong BlackMask, ulong Block, bool white),
+ulong CapturesKnight(int index, ulong WhiteMask, ulong BlackMask, ulong Block, bool white),
+ulong CapturesBishop(int index, ulong WhiteMask, ulong BlackMask, ulong Block, bool white),
+ulong CapturesRook(int index, ulong WhiteMask, ulong BlackMask, ulong Block, bool white),
+ulong CapturesQueen(int index, ulong WhiteMask, ulong BlackMask, ulong Block, bool white)
+
+Returns bitboard of pseudolegal captures of corresponding piece.
+
+l) 

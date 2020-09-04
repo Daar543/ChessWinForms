@@ -701,7 +701,7 @@
             return mo;
         }
         public static ulong[] initPawnCaps(bool white)
-        {
+        { //initializes capture squares for pawn
             var captures = new ulong[64];
             for (int i = 0; i < captures.Length; ++i)
             {
@@ -711,7 +711,7 @@
         }
 
         public static short[] initEPawnCaps(bool white)
-        {
+        { //initializes ep-capture squares for pawn
             var captures = new short[64];
             for (int i = 0; i < captures.Length; ++i)
             {
@@ -772,13 +772,14 @@
         public static readonly short[] EP_Pawn_White = initEPawnCaps(true);
         public static readonly short[] EP_Pawn_Black = initEPawnCaps(false);
         static byte Castling_White(int position)
-        {
+        {   //returns two bits, kingside and queenside
+
             //least significant bits 1-4 signify castling, higher ones for white
             byte cas = (byte)((position >> 2) & 3);
             if ((cas & 1) != 0) //queenside
             {
                 if (
-                    ((Block & ((ulong)0b111 << 57)) != 0) || //if squares 57-59 are either bocked or attacked by opponent
+                    ((Block & ((ulong)0b111 << 57)) != 0) || //if squares 57-59 are bocked or squares 58-60 attacked by opponent
                     (Attacked(60, Wmask, Bmask, Block, false, BitBoards) || Attacked(59, Wmask, Bmask, Block, false, BitBoards) || Attacked(58, Wmask, Bmask, Block, false, BitBoards))
                    )
                     cas ^= 1;
@@ -786,7 +787,7 @@
             if ((cas & 2) != 0) //kingside
             {
                 if (
-                    ((Block & ((ulong)0b11 << 61)) != 0) || //if squares 61-62 are either bocked or attacked by opponent
+                    ((Block & ((ulong)0b11 << 61)) != 0) || //if squares 61-62 are bocked or squares 60-62 attacked by opponent
                     (Attacked(60, Wmask, Bmask, Block, false, BitBoards) || Attacked(61, Wmask, Bmask, Block, false, BitBoards) || Attacked(62, Wmask, Bmask, Block, false, BitBoards))
                    )
                     cas ^= 2;
@@ -801,7 +802,7 @@
             if ((cas & 1) != 0) //queenside
             {
                 if (
-                    ((Block & (0b111 << 1)) != 0) || //if squares 1-3 are either bocked or attacked by opponent
+                    ((Block & (0b111 << 1)) != 0) || //if squares 1-3 are blocked or squares 2-4 attacked by opponent
                     (Attacked(4, Wmask, Bmask, Block, true, BitBoards) || Attacked(3, Wmask, Bmask, Block, true, BitBoards) || Attacked(2, Wmask, Bmask, Block, true, BitBoards))
                    )
                     cas ^= 1;
@@ -809,7 +810,7 @@
             if ((cas & 2) != 0) //kingside
             {
                 if (
-                    ((Block & (0b11 << 5)) != 0) || //if squares 5-6 are either bocked or attacked by opponent
+                    ((Block & (0b11 << 5)) != 0) || //if squares 5-6 are blocked or squares 4-6 attacked by opponent
                     (Attacked(4, Wmask, Bmask, Block, true, BitBoards) || Attacked(5, Wmask, Bmask, Block, true, BitBoards) || Attacked(6, Wmask, Bmask, Block, true, BitBoards))
                    )
                     cas ^= 2;
@@ -818,53 +819,53 @@
         }
 
         //SUPER PIECE - ATTACKED
-        public static bool Attacked(int index, ulong WhiteMask, ulong BlackMask, ulong Block, bool white, ulong[] Bitboards) //last parameter is the attacking side!
+        public static bool Attacked(int index, ulong WhiteMask, ulong BlackMask, ulong Block, bool white, ulong[] Bitboards) //"white" parameter is the attacking side!
         {
             //inverts colors
             if (white)
             {
-                ulong pawns = CapturesPawn_Black[index];
-                if ((Bitboards[BB_P] & pawns) != 0)
+                ulong Pawn = CapturesPawn_Black[index]; //inverted, as pawns move only forward
+                if ((Bitboards[BB_P] & Pawn) != 0)
                     return true;
 
-                ulong knights = CapturesKnight(index, BlackMask, WhiteMask, Block, true);
-                if ((Bitboards[BB_N] & knights) != 0)
+                ulong Knight = CapturesKnight(index, BlackMask, WhiteMask, Block, true);
+                if ((Bitboards[BB_N] & Knight) != 0)
                     return true;
 
-                ulong king = CapturesKing(index, BlackMask, WhiteMask, Block, true);
-                if ((Bitboards[BB_K] & king) != 0)
+                ulong King = CapturesKing(index, BlackMask, WhiteMask, Block, true);
+                if ((Bitboards[BB_K] & King) != 0)
                     return true;
 
-                ulong bishopsQueens = CapturesBishop(index, BlackMask, WhiteMask, Block, true);
-                if (((Bitboards[BB_B] | Bitboards[BB_Q]) & bishopsQueens) != 0)
+                ulong BishopOrQueen = CapturesBishop(index, BlackMask, WhiteMask, Block, true);
+                if (((Bitboards[BB_B] | Bitboards[BB_Q]) & BishopOrQueen) != 0)
                     return true;
 
-                ulong rooksQueens = CapturesRook(index, BlackMask, WhiteMask, Block, true);
-                if (((Bitboards[BB_R] | Bitboards[BB_Q]) & rooksQueens) != 0)
+                ulong RookOrQueen = CapturesRook(index, BlackMask, WhiteMask, Block, true);
+                if (((Bitboards[BB_R] | Bitboards[BB_Q]) & RookOrQueen) != 0)
                     return true;
 
                 return false;
             }
             else
             {
-                ulong pawns = CapturesPawn_White[index];
-                if ((Bitboards[BB_p] & pawns) != 0)
+                ulong Pawn = CapturesPawn_White[index]; //inverted, as pawns move only forward
+                if ((Bitboards[BB_p] & Pawn) != 0)
                     return true;
 
-                ulong knights = CapturesKnight(index, BlackMask, WhiteMask, Block, false);
-                if ((Bitboards[BB_n] & knights) != 0)
+                ulong Knight = CapturesKnight(index, BlackMask, WhiteMask, Block, false);
+                if ((Bitboards[BB_n] & Knight) != 0)
                     return true;
 
-                ulong king = CapturesKing(index, BlackMask, WhiteMask, Block, false);
-                if ((Bitboards[BB_k] & king) != 0)
+                ulong King = CapturesKing(index, BlackMask, WhiteMask, Block, false);
+                if ((Bitboards[BB_k] & King) != 0)
                     return true;
 
-                ulong bishopsQueens = CapturesBishop(index, BlackMask, WhiteMask, Block, false);
-                if (((Bitboards[BB_b] | Bitboards[BB_q]) & bishopsQueens) != 0)
+                ulong BishopOrQueen = CapturesBishop(index, BlackMask, WhiteMask, Block, false);
+                if (((Bitboards[BB_b] | Bitboards[BB_q]) & BishopOrQueen) != 0)
                     return true;
 
-                ulong rooksQueens = CapturesRook(index, BlackMask, WhiteMask, Block, false);
-                if (((Bitboards[BB_r] | Bitboards[BB_q]) & rooksQueens) != 0)
+                ulong RookOrQueen = CapturesRook(index, BlackMask, WhiteMask, Block, false);
+                if (((Bitboards[BB_r] | Bitboards[BB_q]) & RookOrQueen) != 0)
                     return true;
 
                 return false;
@@ -2221,86 +2222,12 @@
             }
         }
 
-        public static int AlphaBeta_TT(int currdepth, int maxdepth, int alpha, int beta, bool white, LINE pline, bool evaluation_system)
-        {
-
-            //var ss = new Stopwatch();
-            //ss.Start();
-
-            int curreval;
-            LINE line = new LINE(maxdepth);
-            bool end = true;
-            if (currdepth >= maxdepth)
-            {
-                NodesSearched += 1;
-                pline.totalmoves = 0;
-                int ira = Quisce(int.MinValue + 10, int.MaxValue - 10, white, evaluation_system);
-                return ira;
-            }
-            uint[] mvs = white ? MoveGeneration_White(BitBoards).ToArray() : MoveGeneration_Black(BitBoards).ToArray();
-            SortMoves(mvs);
-
-            NodesSearched += 1;
-            for (int i = 0; i < mvs.Length; ++i)
-            {
-                //int checkito = Evaluation();
-                uint donemove = mvs[i];
-                uint[] mvm = MakeMove(donemove, white);
-
-                //what if move is illegal
-                if (Attacked(white ? Wking : Bking, Wmask, Bmask, Block, !white, BitBoards))
-                {
-                    UndoMove(mvm, white);
-                    continue;
-                }
-                end = false;
-
-                curreval = -AlphaBeta_TT(currdepth + 1, maxdepth, -beta, -alpha, !white, line, evaluation_system);
-
-                UndoMove(mvm, white);
-
-                if (curreval >= beta)
-                {
-                    return beta;
-                }
-                if (curreval > alpha)
-                {
-
-                    alpha = curreval;
-                    //change principal variation
-
-                    pline.argmove[0] = donemove;
-                    //copy this:
-                    /*
-                        line.argmove, //which move we start
-                        pline.argmove + 1, //max moves from current line, increased length
-                        line.totalmoves * sizeof(uint) //how many of the integers 
-                     */
-                    //first element of pline stays, and the whole "line" gets added
-                    int s = 0;
-                    for (int l = 0; line.argmove[l] != 0; ++l)
-                    {
-                        s++;
-                    }
-                    Array.Copy(line.argmove, 0, pline.argmove, 1, s);
-                    pline.totalmoves = line.totalmoves + 1;
-                }
-            }
-            if (end)
-            { //if player has no legal moves, it's mate or stalemate
-                return -EndMateEval(white, 1 + currdepth);
-            }
-            if (InsufMaterial()||NoProgress())
-            {
-                return 0;
-            }
-            return alpha;
-        }
-        public static int AlphaBeta_Rewritten(int currdepth, int maxdepth, int alpha, int beta, bool white, LINE pline, bool evaluation_system)
+        
+        public static int AlphaBeta_Rewritten(int currdepth, int maxdepth, int alpha, int beta, bool white, uint[] pline, bool evaluation_system)
         {
             NodesSearched += 1;
             int AlphaOrig = alpha;
-            LINE line = new LINE(maxdepth);
+            uint[] line = new uint[maxdepth];
             Hashentry entry;
             bool end = true;
 
@@ -2336,24 +2263,23 @@
                             {
                                 t++;
                             }
-                            //pline.argmove[0] = entry.move;
+                            //pline[0] = entry.move;
 
                             //copy this:
                             /*
-                                line.argmove, //which move we start
-                                pline.argmove + 1, //max moves from current line, increased length
+                                line, //which move we start
+                                pline + 1, //max moves from current line, increased length
                                 line.totalmoves * sizeof(uint) //how many of the integers 
                              */
                             //first element of pline stays, and the whole "line" gets added
                             int s = 0;
-                            for (int l = 0; line.argmove[l] != 0; ++l)
+                            for (int l = 0; line[l] != 0; ++l)
                             {
                                 s++;
                             }
-                            pline.argmove = entry.pv;
-                            Array.Copy(line.argmove, 0, pline.argmove, t, s);
-                            //Array.Copy(line.argmove, 0, pline.argmove, 1, s);
-                            pline.totalmoves = line.totalmoves + 1;
+                            pline = entry.pv;
+                            Array.Copy(line, 0, pline, t, s);
+                            //Array.Copy(line, 0, pline, 1, s);
                         }
                     }
                 }
@@ -2433,21 +2359,20 @@
                     alpha = curreval;
                     //change principal variation
 
-                    pline.argmove[0] = currentBest;
+                    pline[0] = currentBest;
                     //copy this:
                     /*
-                        line.argmove, //which move we start
-                        pline.argmove + 1, //max moves from current line, increased length
+                        line, //which move we start
+                        pline + 1, //max moves from current line, increased length
                         line.totalmoves * sizeof(uint) //how many of the integers 
                      */
                     //first element of pline stays, and the whole "line" gets added
                     int s = 0;
-                    for (int l = 0; line.argmove[l] != 0; ++l)
+                    for (int l = 0; line[l] != 0; ++l)
                     {
                         s++;
                     }
-                    Array.Copy(line.argmove, 0, pline.argmove, 1, s);
-                    pline.totalmoves = line.totalmoves + 1;
+                    Array.Copy(line, 0, pline, 1, s);
                 }
             }
             if (end)
@@ -2484,9 +2409,9 @@
             return alpha;
         }
 
-        public static bool Bit(int position, int j)
+        public static bool Bit(int number, int Pos)
         {
-            return (((position) & (1 << j)) != 0);
+            return (((number) & (1 << Pos)) != 0);
         }
 
         public static bool SqColor(int index) //true light false dark
@@ -2571,9 +2496,8 @@
         {
             Random rand = new Random();
 
-            // For each spot in the array, pick
-            // a random item to swap into that spot.
-            for (int i = 0; i < items.Length - 1; i++)
+            // For each spot in the array, pick a random item to swap into that spot.
+            for (int i = 0; i < items.Length - 1; ++i)
             {
                 int j = rand.Next(i, items.Length);
                 T temp = items[i];
@@ -2583,13 +2507,13 @@
         }
         public static bool NoProgress()
         {
-            //no progress: at least than 50 blank moves
-            return (((Position >> 24) & (0b00111111)) >= 50);
+            //no progress: at least 50 blank moves, that is 100 plies
+            return (((Position >> 24) & (0b11111111)) >= 100);
         }
         public static bool InsufMaterial() // checks for draw by lack of material
         {
             //any pawns, rooks or queens? False
-            if ((BitBoards[1] | BitBoards[4] | BitBoards[5] | BitBoards[7] | BitBoards[10] | BitBoards[11]) != 0) return false;
+            if ((BitBoards[1] !=0) ||  (BitBoards[4] !=0) ||  (BitBoards[5] !=0) ||  (BitBoards[7] !=0) ||  (BitBoards[10] !=0) ||  (BitBoards[11] != 0) ) return false;
             bool material = false;
             //plus same-colored bishops or nothing?
             ulong bish = BitBoards[3] | BitBoards[9];
@@ -2944,7 +2868,7 @@
                 }*/
                 int ab = 0;
                 end = true;
-                LINE principalVariation = new LINE(deph + (player ? 0 : -1));
+                uint[] principalVariation = new uint[deph + (player ? 0 : -1)];
                 for (int k = 0; k < TranspoTable.Length; ++k)
                 {
                     TranspoTable[k] = new Dictionary<uint, Hashentry>();
@@ -2990,7 +2914,7 @@
                         //mvm = MakeMove(mov, false);
                         uint mc = IncodeMove(mo, false);
                         mvm = MakeMove(mc, false);*/
-                        mov = principalVariation.argmove[0];
+                        mov = principalVariation[0];
                     }
                     if (mov == 0)
                     {
@@ -3084,9 +3008,9 @@
                 Console.WriteLine("Depth:{0} Eval: {1}", deph, ab);
                 if (player || !player)
                 {
-                    for (int d = 0; d < principalVariation.argmove.Length; ++d)
+                    for (int d = 0; d < principalVariation.Length; ++d)
                     {
-                        Console.Write(DecodeMove((int)principalVariation.argmove[d]));
+                        Console.Write(DecodeMove((int)principalVariation[d]));
                         Console.Write(" ");
                     }
                 }
@@ -3148,7 +3072,8 @@
         }
 
 
-
+        public uint[] princvar = new uint[7];
+        public string[] pvmoves = new string[7];
         public int ComputersMove(bool white, int totmoves,int depth_base)
         {
 
@@ -3203,7 +3128,7 @@
             TimeSpent = 0;
 
             int ab = 0;
-            LINE principalVariation = new LINE(deph /*+ (player ? 0 : -1)*/);
+            uint[] principalVariation = new uint[deph];
             for (int k = 0; k < TranspoTable.Length; ++k)
             {
                 TranspoTable[k] = new Dictionary<uint, Hashentry>();
@@ -3224,11 +3149,16 @@
                 TimeSpent = swplay.ElapsedMilliseconds;
                 swplay.Reset();
 
-
+                princvar = principalVariation;
+                pvmoves = new string[princvar.Length];
+                for(int i = 0; i < princvar.Length; ++i)
+                {
+                    pvmoves[i] = DecodeMove((int)princvar[i]);
+                }
                 end = true;
                 for (int i = 0; i < 1; ++i)
                 {
-                    mov = principalVariation.argmove[0];
+                    mov = principalVariation[0];
                 }
                 if (mov == 0)
                 {
@@ -3607,19 +3537,18 @@
             }
         }
 
-        public static int AlphaBeta(int currdepth, int maxdepth, int alpha, int beta, bool white, LINE pline, bool evaluation_system)
+        public static int AlphaBeta(int currdepth, int maxdepth, int alpha, int beta, bool white, uint[] pline, bool evaluation_system)
         {
 
             //var ss = new Stopwatch();
             //ss.Start();
 
             int curreval;
-            LINE line = new LINE(maxdepth);
+            uint[] line = new uint[maxdepth];
             bool end = true;
             if (currdepth >= maxdepth)
             {
                 NodesSearched += 1;
-                pline.totalmoves = 0;
                 int ira = Quisce(int.MinValue + 10, int.MaxValue - 10, white, evaluation_system);
 
                 /*ss.Stop();
@@ -3710,22 +3639,21 @@
                     alpha = curreval;
                     //change principal variation
 
-                    pline.argmove[0] = donemove;
+                    pline[0] = donemove;
                     //copy this:
                     /*
-                        line.argmove, //which move we start
-                        pline.argmove + 1, //max moves from current line, increased length
+                        line, //which move we start
+                        pline + 1, //max moves from current line, increased length
                         line.totalmoves * sizeof(uint) //how many of the integers 
                      */
                     //first element of pline stays, and the whole "line" gets added
                     int s = 0;
-                    for (int l = 0; line.argmove[l] != 0; ++l)
+                    for (int l = 0; line[l] != 0; ++l)
                     {
                         s++;
                     }
-                    Array.Copy(line.argmove, 0, pline.argmove, 1, s);
-                    //Array.Copy(pline.argmove, ref line.argmove +1, line.totalmoves+1);
-                    pline.totalmoves = line.totalmoves + 1;
+                    Array.Copy(line, 0, pline, 1, s);
+                    //Array.Copy(pline, ref line +1, line.totalmoves+1);
                 }
             }
             if (end)
@@ -3772,29 +3700,29 @@
             {
                 alpha = staticEval;
                 //add principal variation here
-                /*pline.argmove[0] = emptymove;
-                //if (pline.argmove[0] != 0 || line.argmove[0] != 0)
+                /*pline[0] = emptymove;
+                //if (pline[0] != 0 || line[0] != 0)
                 {
                     int s = 0;
                     int p = 0;
-                    for (int l = 0; l < line.argmove.Length; ++l)
+                    for (int l = 0; l < line.Length; ++l)
                     {
-                        if (line.argmove[l] == 0)
+                        if (line[l] == 0)
                         {
                             s = l;
                             break;
                         }
                     }
-                    for (int l = 0; l < pline.argmove.Length; ++l)
+                    for (int l = 0; l < pline.Length; ++l)
                     {
-                        if (pline.argmove[l] == 0)
+                        if (pline[l] == 0)
                         {
                             p = l;
                             break;
                         }
                     }
-                    //Array.Resize(ref pline.argmove, s + p+1);
-                    Array.Copy(line.argmove, 0, pline.argmove, 1, s);
+                    //Array.Resize(ref pline, s + p+1);
+                    Array.Copy(line, 0, pline, 1, s);
                 }*/
 
             }
@@ -3861,28 +3789,28 @@
                 {
                     alpha = curreval;
                     //increase the PV 
-                    /*pline.argmove[0] = donemove;
+                    /*pline[0] = donemove;
                     int s = 0;
                     int p = 0;
-                    for (int l = 0; l < line.argmove.Length; ++l)
+                    for (int l = 0; l < line.Length; ++l)
                     {
-                        if (line.argmove[l] == 0)
+                        if (line[l] == 0)
                         {
                             s = l;
                             break;
                         }
                     }
-                    for (int l = 0; l < pline.argmove.Length; ++l)
+                    for (int l = 0; l < pline.Length; ++l)
                     {
-                        if (pline.argmove[l] == 0)
+                        if (pline[l] == 0)
                         {
                             p = l;
                             break;
                         }
                     }
-                    //Array.Resize(ref pline.argmove, s + p+1);
-                    Array.Copy(line.argmove, 0, pline.argmove, 1, s);
-                    //Array.Copy(pline.argmove, ref line.argmove +1, line.totalmoves+1);
+                    //Array.Resize(ref pline, s + p+1);
+                    Array.Copy(line, 0, pline, 1, s);
+                    //Array.Copy(pline, ref line +1, line.totalmoves+1);
                     pline.totalmoves = line.totalmoves + 1;
                     */
                 }

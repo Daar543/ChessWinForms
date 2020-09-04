@@ -34,8 +34,8 @@ namespace Sachy_Obrazky
             moveMade = false;
         }
 
-        const int StartingPos = 3;
-        const int MinimalMoveDelay = 1000; //1000 ms
+        const int StartingPos = 9;
+        const int MinimalMoveDelay = 100; //1000 ms
         static readonly Color light = Color.LightGray;
         static readonly Color dark = Color.Brown;
         static readonly Color clicked_own = Color.LightGreen;
@@ -53,6 +53,7 @@ namespace Sachy_Obrazky
         Button aiw = new Button();
         Button aib = new Button();
         Button newg = new Button();
+        TextBox Analys = new TextBox();
 
         private void MakeBoard(bool flipped)
         {
@@ -118,6 +119,15 @@ namespace Sachy_Obrazky
                 tx.Enabled = false;
                 tx.BringToFront();
             }
+            panel2.Height = panel1.Height;
+            panel2.Location = new Point(panel1.Location.X - panel2.Width, panel1.Location.Y);
+            panel3.Width = panel1.Width * 8 / 9;
+            panel3.Location = new Point(panel1.Location.X + panel1.Width / 9, panel1.Location.Y+panel1.Height);
+            //endgame panel
+            panel3.Controls.Add(KonecHry);
+            KonecHry.Location = new Point(0, panel3.Height - KonecHry.Height);
+            KonecHry.Width = panel3.Width;
+            KonecHry.Show();
             /*var refbt = new Button();
             panel1.Controls.Add(refbt);
             refbt.Height = size;
@@ -208,6 +218,15 @@ namespace Sachy_Obrazky
             plb.Tag = 1;
             plb.Click += AsPlayer_Click;
 
+            var hideanalys = new Button();
+            panel2.Controls.Add(hideanalys);
+            hideanalys.Height = size;
+            hideanalys.Width = size;
+            hideanalys.Text = "Hide move showing";
+            hideanalys.Location = new Point(size * 0, (int)(size * 2));
+            hideanalys.Tag = 1;
+            hideanalys.Click += HideAna_Click;
+
             //promotions
             for (int i = 0; i < 4; ++i)
             {
@@ -221,6 +240,10 @@ namespace Sachy_Obrazky
                 proms[i].Tag = i;
                 proms[i].Click += Promot_Click;
             }
+
+            //analysis box
+            panel3.Controls.Add(Analys);
+            Analys.Location = new Point(panel3.Width / 2, 0);
         }
 
         void ShowPromotion(int target, bool white)
@@ -289,6 +312,12 @@ namespace Sachy_Obrazky
         {
             moveMade = false;
             int mov = enj.ComputersMove(white,gamelength, white?intelWhite:intelBlack);
+            string textforbox = "";
+            for(int i = 0; i < enj.pvmoves.Length; ++i)
+            {
+                textforbox += enj.pvmoves[i] + " "; 
+            }
+            Analys.Text = textforbox;
             //int x = enj.PlayersMove(white, gamelength, 0);
             notation = enj.Notation;
             gamelength += 1;
@@ -462,7 +491,18 @@ namespace Sachy_Obrazky
             }
             return;
         }
-
+        void HideAna_Click(object sender, EventArgs e)
+        {
+            if (Analys.Visible)
+            {
+                Analys.Hide();
+            }
+            else
+            {
+                Analys.Show();
+            }
+            return;
+        }
         void Save_Click(object sender, EventArgs e)
         {
             Engine.RewritePartia("partie.txt");

@@ -199,7 +199,21 @@ Used when determining if bishops are on the same color (as they move only diagon
 First of all, I would like to apologize for inconsistencies in "early" functions, where I used variables Wmask, Bmask... as parameters.
 The functions could use some cleaning, but they work.
 
-3A) Generating moves
+3A) Helper functions
+
+a)  bool Bit(ulong bitboard, int Pos),
+bool Bit(int number, int Pos)
+Checks if a bit is set on Pos position of the integer.
+
+b) void XH(int where)
+
+Changes the Zobrist hash (see HashSeed) by xoring it by number on "where" index.
+
+c) ulong[] GenRandomNumbers(int howmany, int seed)
+
+Generates an array of ulongs (Length = howmany).
+
+3B) Generating moves
 
 The general algoritm is: 
 - Initialize bitboard of target squares
@@ -280,4 +294,68 @@ ulong CapturesQueen(int index, ulong WhiteMask, ulong BlackMask, ulong Block, bo
 
 Returns bitboard of pseudolegal captures of corresponding piece.
 
-l) 
+l) ulong MovesPawn(int index, ulong WhiteMask, ulong BlackMask, ulong Block, bool white)
+
+Generates a bitboard for pawn's moves, excluding en-passant. Given pawns' irregular movement, every case is resolved specifically.
+
+m) ulong genCapturesPawn(int index, bool white)
+
+Returns bitboard of squares which are currently attacked by white/black pawn.
+
+n) short genECapturesPawn(int index, bool white)
+
+Returns two-byte number. Each byte is an index of square which is attacked by pawn on input index. 
+This means if only one capture is available, the other square will be wrongly presented as a8 (index 0), 
+but this has no negative impact on purpose of this function.
+
+o) ulong[] initPawnCaps(bool white),
+short[] initEPawnCaps(bool white)
+
+Efficient initialization of arrays CapturesPawn_White, CapturesPawn_Black, EP_Pawn_White, EP_Pawn_Black,
+which are used as lookup tables.
+
+p) byte Castling_White(int position), byte Castling_Black(int position)
+
+Returns 0b00, 0b01, 0b10, 0b11 based on if white or black can castle kingside (upper bit) or queenside (lower bit) in current position.
+The possibility of castling is based on:
+- castling rights (if player hasn't moved king or rook yet, the right is valid)
+- free squares between king and rook
+- king not in check on all three squares
+
+q) bool Attacked(int index, ulong WhiteMask, ulong BlackMask, ulong Block, bool white, ulong[] Bitboards)
+
+Returns true if the square is attacked by at least one piece of the given color. Necessary for determining if king is checked.
+As moves are generated from the square in question, the pawn's color is inverted.
+
+r) ulong GenMoves(int index, int type, bool white, ulong WhiteMask, ulong BlackMask, ulong Block),
+ulong GenCaptures(int index, int type, bool white, ulong WhiteMask, ulong BlackMask, ulong Block)
+
+Wrappers for all move-generating functions. Excludes special moves, such as castling and en-passant captures.
+
+s) int[] EPGen(int epsquare, bool white)
+
+Generates two moves as integers (see function BuildMoveWhite, BuildMoveBlack), which represent en-passant captures.
+For example, if the "epsquare" is 19 (=f6), then the incoded moves will be e5xf6 e.p., and g5xf6 e.p. 
+under the condition a pawn is present on e5 or g5, respectively. 
+If the en-passant capture cannot be generated, integer 0 will be returned in the array.
+
+t) List<uint> MoveGeneration_White(ulong[] BBs),
+List<uint> MoveGeneration_Black(ulong[] BBs),
+List<uint> CapsGeneration_White(ulong[] BBs),
+List<uint> CapsGeneration_Black(ulong[] BBs)
+
+These functions generate list of all possible pseudolegal moves (or only captures) a given side can make. 
+In the rest of this description, I will refer only to MoveGeneration_White.
+For the format of move, see BuildMoveWhite.
+
+First of all, the function has to find pieces capable of moving. This is done by scanning Wmask bitboard. 
+When the bit on given index is set, the function scans through pieces' bitboards to find which exact piece resides on the square.
+Once found, a bitboard for all moves of this piece is generated.
+Lastly, this bitboard is scanned, and if a bit is set, it is possible to build a move using triplet "piece, square from, square to".
+
+For special moves:
+- if a pawn is promoted, move is copied 4 times, adding different promoted piece
+- en-passant moves are generated separately
+- castling is generated separately
+
+u) 

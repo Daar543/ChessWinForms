@@ -35,6 +35,8 @@
             this.KonecHry = new System.Windows.Forms.TextBox();
             this.panel2 = new System.Windows.Forms.Panel();
             this.panel3 = new System.Windows.Forms.Panel();
+            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.panel3.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
@@ -60,10 +62,10 @@
             this.KonecHry.Enabled = false;
             this.KonecHry.Font = new System.Drawing.Font("Microsoft Sans Serif", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.KonecHry.HideSelection = false;
-            this.KonecHry.Location = new System.Drawing.Point(151, -6);
+            this.KonecHry.Location = new System.Drawing.Point(0, 62);
             this.KonecHry.Name = "KonecHry";
             this.KonecHry.ReadOnly = true;
-            this.KonecHry.Size = new System.Drawing.Size(642, 38);
+            this.KonecHry.Size = new System.Drawing.Size(604, 38);
             this.KonecHry.TabIndex = 0;
             this.KonecHry.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.KonecHry.Visible = false;
@@ -78,10 +80,19 @@
             // 
             // panel3
             // 
+            this.panel3.Controls.Add(this.KonecHry);
+            this.panel3.Controls.Add(this.textBox1);
             this.panel3.Location = new System.Drawing.Point(151, 606);
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(200, 100);
+            this.panel3.Size = new System.Drawing.Size(604, 100);
             this.panel3.TabIndex = 65;
+            // 
+            // textBox1
+            // 
+            this.textBox1.Location = new System.Drawing.Point(210, 3);
+            this.textBox1.Name = "textBox1";
+            this.textBox1.Size = new System.Drawing.Size(394, 20);
+            this.textBox1.TabIndex = 66;
             // 
             // Form1
             // 
@@ -90,12 +101,12 @@
             this.ClientSize = new System.Drawing.Size(834, 811);
             this.Controls.Add(this.panel3);
             this.Controls.Add(this.panel2);
-            this.Controls.Add(this.KonecHry);
             this.Controls.Add(this.panel1);
             this.Name = "Form1";
             this.Text = "Form1";
+            this.panel3.ResumeLayout(false);
+            this.panel3.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -106,6 +117,7 @@
         private System.Windows.Forms.TextBox KonecHry;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Panel panel3;
+        private System.Windows.Forms.TextBox textBox1;
     }
 }
 

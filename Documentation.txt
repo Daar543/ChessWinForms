@@ -194,4 +194,14 @@ The functions could use some cleaning, but they work.
 
 3A) Generating moves
 
-a) 
+The general algoritm is: 
+- Initialize bitboard of target squares
+- Loop through all directions of a piece
+	- Loop through all distances in this direction
+		- If outside board, break
+		- Else add the target square into bitboard
+- Negate the bitboard by bitboards of pieces of the same color
+
+a) ulong Land_Moves(int[] Directions, int index, ulong WhiteBoard, ulong BlackBoard, ulong Block, bool white)
+
+This generates possible moves for "landing" pieces, which are king and knight.

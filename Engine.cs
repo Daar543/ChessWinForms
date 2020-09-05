@@ -3801,12 +3801,14 @@
         {
             for (int j = 0; j < 1; ++j)
             {
+                Position = 0;
                 string pozice = databaze[idvychozi];
                 //byte rosad = rosady[pz - 1];
                 char[] ka = TightFenToChar(FenToStr(pozice));
                 bool zacina = !((Position & (1 << 4)) == 0);
                 Wmask = 0;
                 Bmask = 0;
+                
                 BitBoards = CreateBBoards(ka);
                 int[] AllPieces = CreatePieces(ka);
                 for (int i = 0; i < 64; ++i)

@@ -29,13 +29,13 @@ namespace Sachy_Obrazky
             temporaryBitBoards = new ulong[12];
             PrintPic(new ulong[12]);
             PrintPic(BB);
-            white = ( Engine.Position & (1 << 4)) != 0;
+            white = (Engine.Position & (1 << 4)) != 0;
             //PlayGame(enj);
             moveMade = false;
         }
 
         const int StartingPos = 3;
-        const int MinimalMoveDelay = 2000; //1000 ms
+        const int MinimalMoveDelay = 250; //ms
         static readonly Color light = Color.LightGray;
         static readonly Color dark = Color.Brown;
         static readonly Color clicked_own = Color.LightGreen;
@@ -54,6 +54,38 @@ namespace Sachy_Obrazky
         Button aib = new Button();
         Button newg = new Button();
         TextBox Analys = new TextBox();
+
+        public static string[] PieceImages = new string[]
+        {
+            "Wking_light.png",
+            "Wpawn_light.png",
+            "Wknight_light.png",
+            "Wbishop_light.png",
+            "Wrook_light.png",
+            "Wqueen_light.png",
+            "Bking_light.png",
+            "Bpawn_light.png",
+            "Bknight_light.png",
+            "Bbishop_light.png",
+            "Brook_light.png",
+            "Bqueen_light.png",
+        };
+        static Bitmap[] initImagesPieces()
+        {
+            Bitmap[] ip = new Bitmap[12];
+            for (int i = 0; i < 12; ++i)
+            {
+                ip[i] = new Bitmap(Application.StartupPath + "\\Image\\" + PieceImages[i]);
+            }
+            return ip;
+        }
+        static readonly Bitmap[] ImagesPieces = initImagesPieces();/* new Bitmap[12]
+        {
+            new Bitmap(Application.StartupPath + "\\Image\\" + PieceImages[0]),
+            new Bitmap(Application.StartupPath + "\\Image\\" + PieceImages[1]),
+            new Bitmap(Application.StartupPath + "\\Image\\" + PieceImages[2]),
+        };*/
+        
 
         private void MakeBoard(bool flipped)
         {
@@ -641,7 +673,7 @@ namespace Sachy_Obrazky
             int width = (int)(b.Width * ScaleRatio);
             int height = (int)(b.Height * ScaleRatio);
 
-            Bitmap originImage = new Bitmap(Application.StartupPath + "\\Image\\" + PieceImages[piece]);
+            Bitmap originImage = ImagesPieces[piece]; //new Bitmap(Application.StartupPath + "\\Image\\" + PieceImages[piece]);
             originImage.MakeTransparent(Color.FromArgb(247,247,247));
             Image image = resizeImage(originImage, new Size(height, width));
             
@@ -653,21 +685,7 @@ namespace Sachy_Obrazky
             // Give the button a flat appearance.
             b.FlatStyle = FlatStyle.Flat;*/
         }
-        public string[] PieceImages = new string[]
-        {
-            "Wking_light.png",
-            "Wpawn_light.png",
-            "Wknight_light.png",
-            "Wbishop_light.png",
-            "Wrook_light.png",
-            "Wqueen_light.png",
-            "Bking_light.png",
-            "Bpawn_light.png",
-            "Bknight_light.png",
-            "Bbishop_light.png",
-            "Brook_light.png",
-            "Bqueen_light.png",
-        };
+        
         
         public void PrintPic(ulong[] bitboards)
         { //same as the Printout in engine function, but changes the names of buttons

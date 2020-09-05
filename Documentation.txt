@@ -207,7 +207,7 @@ Checks if a bit is set on Pos position of the integer.
 
 b) void XH(int where)
 
-Changes the Zobrist hash (see HashSeed) by xoring it by number on "where" index.
+Changes the Zobrist hash (see HashSeed 2A/e) by xoring it by number on "where" index.
 
 c) ulong[] GenRandomNumbers(int howmany, int seed)
 
@@ -471,7 +471,7 @@ Near the start of the function, computers checks current material. If it is too 
 
 After that, informative variables NodesSearched and TimeSpent are initialized (not used in form application).
 
-Next, an array principalVariation is initialized and function AlphaBeta is called (see 3E/c).
+Next, an array principalVariation is initialized and function AlphaBeta is called (see 3E/b).
 This results in principalVariation be filled with series of best moves (according to AI), and 
 variable analysisEvaluation will contain the evaluation of position
 made after series of principalVariation moves.
@@ -485,8 +485,86 @@ If this move has created draw situation, game ends.
 Returns either move that has been made (see BuildMoveWhite, 3D/a), or mate/stalemate/draw state:
  1 for draw, 2 for black wins, 3 for white wins.
 
-b) int Quisce(int alpha, int beta, bool white, bool evaluation_system)
+b) int AlphaBeta(int currdepth, int maxdepth, int alpha, int beta, bool white, uint[] pline, bool evaluation_system)
 
+The standard algorithm for evaluating chess-like games. 
+The positional evaluation is described in Quisce (see 3E/c) and whole 3C section.
+If evaluation_system is true, the evaluation is partially random (see 3E/c).
 
+In short: computer generates all possible pseudolegal moves from this position and sorts them by priority (see SortMoves 3E/d).
+Then, it loops through making all moves, evaluates them by recursively calling AlphaBeta on the new position, and unmakes them.
+If the move is illegal, it's not evaluated.
+If no move is legal, the flag "end" stays raised, and position is evaluated as mate or stalemate (see EndMateEval 3C/a).
+If the algoritm reaches maximum depth, the position continues to be evaluated by quiescence search (see Quisce 3E/c).
+
+The algorithm additionally contains two arrays uint[]line and uint[]pline, which contain the principal variation in current depth.
+If evaluation of move is greater than alpha ( = increases our lowest guaranteed score), 
+the current move is added to the principal variation.
+
+Returns score of position - an evaluation of position which players reach with their supposedly best moves.
+
+c) int Quisce(int alpha, int beta, bool white, bool evaluation_system)
+
+Quiescence search - middle phase of analysis, the moderator between AlphaBeta (see 3C/b) 
+and "static" positional evaluation (see Evaluation 3C/e).
+
+The motivation for this search is as following: AlphaBeta can consider the last move to be capture. 
+Since AlphaBeta wasn't allowed to analyze deeper, it will consider the state on board as beneficial, 
+not recognizing the capturing piece can be immediately recaptured. 
+
+Quisce solves this problem by using search which is not limited by depth, but only by types of moves - 
+evaluates only captures, which drastically change the evaluation.
+
+For the move generation, more efficient function which consider only captures are used (see 3B/t). 
+This requires two changes in the analysis itself:
+
+Firstly, the algorithm cannot determine if a player is in mate/stalemate, or simply does not have any legal capture available.
+That's why this is ommited.
+
+Secondly, there can be a case when no beneficial captures are available (all pieces are protected). 
+In this case, we can assume there is at least one other move which doesn't make position necessarily worse 
+(the opposite, zugzwang, occurs in insignificant minority of cases) and return evaluation of current position.
+
+The evaluation itself has also a factor of randomness (if evaluation_system is true), about +- 0.25 pawns.
+This surprisingly encourages the AI to have more mobility available and to do forcing moves (opponent has low amount of responses).
+The reasoning is: if a computer has equally good moves available, but better mobility, 
+it has higher chance to evaluate one of the moves with high bias. 
+(From chess programming wiki: a computer with fully random evaluation of depth 5 
+	(classic minimax algorithm) has won 100-0 against random-moves computer).
+
+Returns evaluation of current position, when only captures and static position are evaluated.
+
+d) void SortMoves(uint[]moves)
+
+Assigns a priority to each capture or promotion, and sorts collection of moves by this priority.
+The algorithm uses stable sorting, although unstable one will work as well, and can partially replace shuffling function.
+
+For the priority of captures, see 2C/c.
+
+For the priority of promotions - usually promoted piece is going to get instantly captured, 
+	so analysis algorithms can evaluate queen/rook promotion as equal - but it is more logical to promote to a queen.
+
+e) int AlphaBeta_Rewritten(int currdepth, int maxdepth, int alpha, int beta, bool white, uint[] pline, bool evaluation_system)
+
+This is a faster version of AlphaBeta (see 2E/b), as it uses so-called Transposition Table.
+The idea behind Transposition Table is the common idea of dynamic programming: if we reach the same position in different order of moves, 
+their evaluation should be the same, so why not reuse the old one?
+
+This requires usage of hashing (see HashSeed 2A/e) and storing the positions in dictionary, I have used class Hashentry for that.
+Apart from previous evaluation and hash, the "flag" information is stored as well. If flag is equal to:
+0 - this continuation has not been refuted, (can increase current alpha)
+1 - this continuation has been proved to be the best for both sides (can be returned right away)
+2 - this continuation has been refuted by beta cutoff (can decrease current beta)
+
+Due to hash collisions and wrong evaluation, I have abandoned this idea, as well as checking for repetitions.
+ My plan is to eventually return to it and implement succesfully.
+
+Returns evaluation of position reached by the best moves of both sides.
+
+II. Form
+
+1) Purpose
+
+ 
 
 

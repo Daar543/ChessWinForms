@@ -2241,15 +2241,15 @@
             bool Intable = (TranspoTable[currdepth].TryGetValue((ushort)(CurrentHash), out entry)); //checks the transpo table
             if (Intable && /*entry.depth == currdepth &&*/ entry.zobrist == CurrentHash && entry.WM == Wmask && entry.BM == Bmask) //check the whole hash, in case of collishns
             {
-                if (entry.flag == 1) //exact 
+                if (entry.flag == 1) //exact - same as beta in the moment of evaluation
                 {
                     return entry.eval;
                 }
-                else if (entry.flag == 2) //upper
+                else if (entry.flag == 2) //upper - more than beta in the moment of evaluation
                 {
                     beta = Math.Min(beta, entry.eval);
                 }
-                else if (entry.flag == 0) //lower
+                else if (entry.flag == 0) //lower - less than beta in the moment of evaluation
                 {
                     if (entry.eval > alpha)
                     {
@@ -2795,7 +2795,7 @@
                     atstr = Priorities[attacker];
                 }
                 if (prom != 0)
-                {
+                { //inverts the promoted piece's code, so queen is at the top
                     prom ^= 0b110;
                 }
 

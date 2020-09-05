@@ -1735,7 +1735,7 @@
 
             uint piece = (move >> 24) & ((1 << 4) - 1);
             int blankmoves = (Position >> 24); //first byte signalizes moves which do not progress
-            Position &= ~(0b11111111 << 24); //nullifies the blank move count
+            Position &= ~(0b11111111 << 24); //nullifies the blank move count, returns it at the ending
             if (piece == 1 || piece == 7)
                 blankmoves = 0;
             else
@@ -3072,8 +3072,9 @@
         }
 
 
-        public uint[] princvar = new uint[7];
-        public string[] pvmoves = new string[7];
+        public uint[] princvar = new uint[8];
+        public string[] pvmoves = new string[8];
+        public int analysisEvaluation = 0;
         public int ComputersMove(bool white, int totmoves,int depth_base)
         {
 
@@ -3096,7 +3097,6 @@
                     continue;
                 f |= BitBoards[m];
             }
-            deph = depth_base;
             if (f == 0)
             {
                 //only pawn endgame
@@ -3140,11 +3140,11 @@
 
                 // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, false); //no random
                 ab = AlphaBeta(0, deph /*+ (player ? 0 : -1)*/, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, true); //both random
-                                                                                                                                                // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? true : false); //white random
-                                                                                                                                                // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? false : true); //black random
+                                                                                                                                         // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? true : false); //white random
+                                                                                                                                         // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? false : true); //black random
 
                 //ab = AlphaBeta_Rewritten(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, false);
-
+                analysisEvaluation = ab;
                 swplay.Stop();
                 TimeSpent = swplay.ElapsedMilliseconds;
                 swplay.Reset();
@@ -3156,10 +3156,7 @@
                     pvmoves[i] = DecodeMove((int)princvar[i]);
                 }
                 end = true;
-                for (int i = 0; i < 1; ++i)
-                {
-                    mov = principalVariation[0];
-                }
+                mov = principalVariation[0];
                 if (mov == 0)
                 {
                     end = true;
@@ -3245,10 +3242,6 @@
             {
                 totmoves += 1;
             }
-                
-
-            player ^= true;
-            //end of infinite loop
             return (int)mov;
         }
 
@@ -3646,7 +3639,7 @@
             return alpha;
         }
 
-        static int Quisce(int alpha, int beta, bool white, bool evaluation_system) //,LINE pline)
+        static int Quisce(int alpha, int beta, bool white, bool evaluation_system) 
         {
             int staticEval = 0;
             if (InsufMaterial())

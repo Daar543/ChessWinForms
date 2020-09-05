@@ -450,8 +450,43 @@ are extracted from the corresponding variables, and returned to them at the end 
 
 c) uint UndoMove(uint[] memo, bool white)
 
+An inverse function to MakeMove (3D/c).
+First element of the memo array is the previously made move - contains enough information to reconstruct the board state.
+Second element of the memo array is Position state - other aspects, e.g. castling rights, are hidden in it. 
+	Replacing the current Position variable with the input one is sufficient enough to reset these.
+
+3E) Computer's analysis
+
+a) int ComputersMove(bool white, int totmoves,int depth_base)
+
+Warning: This function is not fully optimized, but is called only once per ply in each game, 
+therefore does not have that high performance impact.
+
+This function represents the full logic "computer" (AI) does when it is supposed to move.
+
+One of the parameters is depth_base. That one is set by player, and represents minimal depth of 
+how "deep" the computer is able to see.
+Near the start of the function, computers checks current material. If it is too low, it improves its in-depth search
+(endgames require more precision, but are also quicker to calculate).
+
+After that, informative variables NodesSearched and TimeSpent are initialized (not used in form application).
+
+Next, an array principalVariation is initialized and function AlphaBeta is called (see 3E/c).
+This results in principalVariation be filled with series of best moves (according to AI), and 
+variable analysisEvaluation will contain the evaluation of position
+made after series of principalVariation moves.
+
+After this, first move of principalVariation is chosen and made (see MakeMove, 3D/b).
+A case that should not happen is that if move is illegal (which means there is no possible move). This would result in game's end.
+
+Correct making of move results in notation of current game being updated, and saved in file "partie.txt" (rewrites old one).
+If this move has created draw situation, game ends.
+
+Returns either move that has been made (see BuildMoveWhite, 3D/a), or mate/stalemate/draw state:
+ 1 for draw, 2 for black wins, 3 for white wins.
+
+b) int Quisce(int alpha, int beta, bool white, bool evaluation_system)
 
 
-b) 
 
-b) uint[] MakeMove(uint move, bool white)
+

@@ -204,12 +204,11 @@
         {
             return Position;
         }
-            
         static int Wking;
         static int Bking;
         static ulong CurrentHash;
         public static Dictionary<uint, Hashentry>[] TranspoTable;
-        public string Notation { get; set; }
+        public string Notation { get; set; } = "";
 
         const int
             hash_side = 772,
@@ -217,7 +216,8 @@
 
 
         static int HammingWeight(ulong x)
-        {
+        {   //from Stack Overflow
+            //returns amount of set bits in given ulong
             x = (x & 0x5555555555555555) + ((x >> 1) & 0x5555555555555555); //put count of each  2 bits into those  2 bits 
             x = (x & 0x3333333333333333) + ((x >> 2) & 0x3333333333333333); //put count of each  4 bits into those  4 bits 
             x = (x & 0x0f0f0f0f0f0f0f0f) + ((x >> 4) & 0x0f0f0f0f0f0f0f0f); //put count of each  8 bits into those  8 bits 
@@ -1734,7 +1734,7 @@
             FixPositionHash();
 
             uint piece = (move >> 24) & ((1 << 4) - 1);
-            int blankmoves = (Position >> 24); //bits 2-7 (MSB) signalize moves which do not progress
+            int blankmoves = (Position >> 24); //first byte signalizes moves which do not progress
             Position &= ~(0b11111111 << 24); //nullifies the blank move count
             if (piece == 1 || piece == 7)
                 blankmoves = 0;
@@ -2574,11 +2574,11 @@
         {
             if (white && (Attacked(Wking, Wmask, Bmask, Block, false, BitBoards)))
             {
-                return int.MaxValue / dep; //dont ask why
+                return (int.MaxValue-10) / dep; //sooner mate = bigger evaluation
             }
             else if ((!white) && (Attacked(Bking, Wmask, Bmask, Block, true, BitBoards)))
             {
-                return int.MaxValue / dep;
+                return (int.MaxValue-10) / dep;
             }
             else
             {
@@ -2640,7 +2640,7 @@
             return;
         }
 
-        public static int LazyEvaluation(bool white) //evaluates position by simple factors
+        public static int LazyEvaluation(bool white) //evaluates only material for given side
         {
             int eva = 0;
             int i;
@@ -2730,7 +2730,7 @@
 
             if (((BitBoards[3] & blacksquares) != BitBoards[3]) && (((BitBoards[3] & whitesquares) != BitBoards[3])))
             {
-                evwhite += 40; //half a pawn for bishops on different colors
+                evwhite += 40; //0.4 pawn for bishops on different colors
             }
             if (((BitBoards[9] & blacksquares) != BitBoards[9]) && (((BitBoards[9] & whitesquares) != BitBoards[9])))
             {
@@ -3117,11 +3117,11 @@
             else
             {
             }
-            TranspoTable = new Dictionary<uint, Hashentry>[deph];
+            /*TranspoTable = new Dictionary<uint, Hashentry>[deph];
             for (int k = 0; k < TranspoTable.Length; ++k)
             {
                 TranspoTable[k] = new Dictionary<uint, Hashentry>();
-            }
+            }*/
             var swplay = new Stopwatch();
 
             NodesSearched = 0;
@@ -3129,10 +3129,10 @@
 
             int ab = 0;
             uint[] principalVariation = new uint[deph];
-            for (int k = 0; k < TranspoTable.Length; ++k)
+            /*for (int k = 0; k < TranspoTable.Length; ++k)
             {
                 TranspoTable[k] = new Dictionary<uint, Hashentry>();
-            }
+            }*/
             if (true)
             {
                 NodesSearched = 0;
@@ -3175,7 +3175,7 @@
                 Console.WriteLine("{0:X}", CurrentHash);*/
                 mvm = MakeMove(mov, player);
                 if (Attacked(player ? Wking : Bking, Wmask, Bmask, Block, !player, BitBoards))
-                {
+                {   //if even the first found move is illegal, game ends (this case should not occur)
                     UndoMove(mvm, player);
                     end = true;
                 }

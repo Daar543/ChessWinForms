@@ -213,6 +213,14 @@ c) ulong[] GenRandomNumbers(int howmany, int seed)
 
 Generates an array of ulongs (Length = howmany).
 
+d) class ULongRandom
+
+A class for easy generation of long random numbers 
+
+e) int HammingWeight(ulong x)
+
+Returns amount of set bits in the ulong x.
+
 3B) Generating moves
 
 The general algoritm is: 
@@ -358,4 +366,92 @@ For special moves:
 - en-passant moves are generated separately
 - castling is generated separately
 
-u) 
+3C) Evaluation of a position
+
+a) int EndMateEval(bool white, int dep)
+
+This function is called when a player has no legal move available. If a moving player is not checked, 
+then the position is called stalemate and therefore has an evaluation of 0.
+
+If a black player is to move and is checked, the position is evaluated as maximally positive for white. 
+In order to encourage quicker mates (in less moves), the value is divied by the current depth - 
+if the mate was found at higher depth, it means more moves were needed to reach that, and therefore is less advantageous.
+
+Based on how Alphabeta function (see 3C/ ) works, the same evaluation is used when white is to move. 
+Therefore, the result of this function is always non-negative.
+If the argument "depth" was too high, the function could produce worse result than standard material evaluation. 
+However, such depth is unrealistic for chess engines.
+
+
+b) bool NoProgress()
+
+From FIDE rules:
+If 50 consecutive moves have been made without capturing a piece or moving a pawn, a player has right to claim a draw.
+If 75 such moves have been made, position is instantly drawn.
+
+I am calling these moves "blank moves" and declare a draw after 50 of these moves are made (with analysis evaluation of 0).
+
+
+c) bool InsufMaterial()
+
+A position is instantly drawn when there is no legal sequence of moves which can result in a mate.
+Chess engines can detect only minority of these positions - as name suggests, when there are so little pieces that 
+a mate position cannot be "built" from them.
+
+Conditions needed to be met are these:
+- no pawns, rooks or queens (pawns can promote to rook or queen, rooks and queens can mate with only help from king)
+- bishops on only the same colored squares OR no bishops and only one knight (regardless of color)
+
+In evaluation functions, these positions always return 0.
+
+d) int LazyEvaluation(bool white)
+
+Returns current amount of material of white/black player,excluding king. See 2C/a Values.
+
+e) int Evaluation()
+
+Evaluates the whole position by these factors:
+
+- material (2C/a)
+- bonus for position of each piece on the board (2C/b); rank is flipped for black pieces
+- +0.4 pawns for bishop double (common strategical advantage; explanation - two bishops can never interfere with each other)
+- different values for king in case of endgame (total material is less than 20 pawns total)
+
+3D) Game progress
+
+a) uint BuildMoveWhite(int piece, int from, int to)
+uint BuildMoveBlack(int piece, int from, int to)
+
+Returns 4-bit integer with these informations (MSB first):
+first byte: upper 4 bits - which piece has been captured (0 if none), lower 4 bits - which piece has moved
+second byte: square which has this piece moved from
+third byte: square which has this piece moved to
+fourth byte: capture flag (1b), kingside/queenside castling flag (2b), promotion flag (1b), promoted piece (2b),
+	pawn-doublemove flag (1b), en-passant flag (1b)
+
+Special moves, such as promotion (default to queen) and castling are resolved in this function as well.
+If a pawn moves diagonally, en-passant flag is raised. If there is no piece (to capture)
+	on the final square, then en-passant flag will stay raised.
+
+b) uint[] MakeMove(uint move, bool white)
+
+Returns array of two uints: first one is the input move, second one is current position state.
+More importantly, changes the board state based on current move:
+
+- changes bits on bitboards of affected pieces (moving,captured,promoted)
+- changes position's hash
+- flips player which is currently to move
+- increments or nullifies blank move count
+- changes castling rights or en-passant possiblity 
+	(if a pawn makes a doublemove, square behind it is immediately flagged for en-passsant)
+
+Some things, such as blank moves (no progress) or "positional" part of the hash 
+are extracted from the corresponding variables, and returned to them at the end of function.
+
+c) uint UndoMove(uint[] memo, bool white)
+
+
+
+b) 
+
+b) uint[] MakeMove(uint move, bool white)

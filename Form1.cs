@@ -34,8 +34,8 @@ namespace Sachy_Obrazky
             moveMade = false;
         }
 
-        const int StartingPos = 5;
-        const int MinimalMoveDelay = 100; //1000 ms
+        const int StartingPos = 3;
+        const int MinimalMoveDelay = 2000; //1000 ms
         static readonly Color light = Color.LightGray;
         static readonly Color dark = Color.Brown;
         static readonly Color clicked_own = Color.LightGreen;
@@ -330,8 +330,8 @@ namespace Sachy_Obrazky
             bitbs = enj.GetBitBoards();
             PrintPic(bitbs);
             HighlightMove(mov);
-            moveMade = true;
             int y = enj.DetermineResult(white);
+            moveMade = true;
             return y;
         }
 
@@ -344,12 +344,12 @@ namespace Sachy_Obrazky
             bitbs = enj.GetBitBoards();
             PrintPic(bitbs);
             temporaryBitBoards = bitbs;
-            moveMade = true;
             result = enj.DetermineResult(white);
             if (result != 0)
             {
                 Finish();
             }
+            moveMade = true;
             return result;
         }
 
@@ -749,7 +749,7 @@ namespace Sachy_Obrazky
 
         private void timer1_Tick(object sender, EventArgs e) //tick time = 10
         {
-            //if the last time ran is less than 3 seconds ago, skip the timer tick.
+            //if the last time ran is less than x seconds ago, skip the tick.
             if (moveMade is false || lastTimeRan > (System.DateTime.Now.Ticks - MinimalMoveDelay*10000)|| !continuing)
             {
                 return;
@@ -763,7 +763,6 @@ namespace Sachy_Obrazky
                 return;
             }
             lastTimeRan = System.DateTime.Now.Ticks;
-            
             
             //continuing = PlayGame(enj) == 0;
             if (result != 0)

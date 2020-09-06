@@ -2517,9 +2517,9 @@
             bool material = false;
             //plus same-colored bishops or nothing?
             ulong bish = BitBoards[3] | BitBoards[9];
+            ulong knig = BitBoards[2] | BitBoards[8];
             if (bish == 0) //no bishops
             {
-                ulong knig = BitBoards[2] | BitBoards[8];
                 //plus only one knight? True
                 for (int i = 0; i < 64; ++i)
                 {
@@ -2534,7 +2534,7 @@
                 }
                 return true;
             }
-            if (((bish & 0xAA55AA55AA55AA55) == bish) || ((bish & 0xAA55AA55AA55AA55) == 0)) //all are either on white or black
+            else if (knig == 0 && (((bish & 0xAA55AA55AA55AA55) == bish) || ((bish & 0xAA55AA55AA55AA55) == 0))) //all are either on white or black
             {
                 return true;
             }
@@ -3799,54 +3799,52 @@
             };
         public ulong[] Initialize(int idvychozi)
         {
-            for (int j = 0; j < 1; ++j)
-            {
-                Position = 0;
-                string pozice = databaze[idvychozi];
-                //byte rosad = rosady[pz - 1];
-                char[] ka = TightFenToChar(FenToStr(pozice));
-                bool zacina = !((Position & (1 << 4)) == 0);
-                Wmask = 0;
-                Bmask = 0;
+            //resets everything, starts new game
+            Position = 0;
+            string pozice = databaze[idvychozi];
+            //byte rosad = rosady[pz - 1];
+            char[] ka = TightFenToChar(FenToStr(pozice));
+            bool zacina = !((Position & (1 << 4)) == 0);
+            Wmask = 0;
+            Bmask = 0;
                 
-                BitBoards = CreateBBoards(ka);
-                int[] AllPieces = CreatePieces(ka);
-                for (int i = 0; i < 64; ++i)
+            BitBoards = CreateBBoards(ka);
+            int[] AllPieces = CreatePieces(ka);
+            /*for (int i = 0; i < 64; ++i)
+            {
+                if (ka[i] != '\0')
                 {
-                    if (ka[i] != '\0')
+                    switch (ka[i])
                     {
-                        switch (ka[i])
-                        {
-                            case 'p':
-                            case 'k':
-                            case 'n':
-                            case 'b':
-                            case 'r':
-                            case 'q':
-                                Bmask |= (((ulong)(1)) << i);
-                                break;
-                            case 'P':
-                            case 'K':
-                            case 'N':
-                            case 'B':
-                            case 'R':
-                            case 'Q':
-                                Wmask |= (((ulong)(1)) << i);
-                                break;
-                        }
+                        case 'p':
+                        case 'k':
+                        case 'n':
+                        case 'b':
+                        case 'r':
+                        case 'q':
+                            Bmask |= (((ulong)(1)) << i);
+                            break;
+                        case 'P':
+                        case 'K':
+                        case 'N':
+                        case 'B':
+                        case 'R':
+                        case 'Q':
+                            Wmask |= (((ulong)(1)) << i);
+                            break;
                     }
                 }
-                Remask();
-                //Block = Wmask | Bmask;
+            }*/
+            Remask();
+            //Block = Wmask | Bmask;
 
-                //Printout(BitBoards);
-                ulong h = HashPosition(HashSeed);
-                CurrentHash = HashPosition(HashSeed);
-                //Console.WriteLine("{0:X}", h);
-                //Play(zacina);
-                //return;
+            //Printout(BitBoards);
+            //ulong h = HashPosition(HashSeed);
+            CurrentHash = HashPosition(HashSeed);
+            //Console.WriteLine("{0:X}", h);
+            //Play(zacina);
+            //return;
 
-            }
             return BitBoards;
         }
         public static void Start()

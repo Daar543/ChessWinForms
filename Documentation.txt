@@ -122,7 +122,7 @@ The advantage of this representation is that it's easier to check whether a piec
 Deinds returns 0x88 representation into normal one. Invalid squares have value of -1.
 This cannot be used to detect all invalid squares, as some of them can have negative value or higher value than 119.
 
-b) int[] Directions_King (Knight, Rook, Bishop, Queen, Pawn_White, Pawn_Black)
+b) int[] Directions_<King> (Knight, Rook, Bishop, Queen, Pawn_White, Pawn_Black)
 
 These integers represent a change of square's index (in 0x88 representation, see 2B/a Indices) if a piece moves by 1 point in the given directions. 
 King, knight and queen can move in 8 directions, while rook and bishop can move in 4 directions. Pawns have specific movement.
@@ -133,6 +133,11 @@ Both of these represent bitboard of all possible moves which can be made by king
 based only on the initial square. 
 If I need to know possible pseudolegal moves for current position, 
 I need only to exclude squares where pieces of the same color (as the moving piece) are.
+
+d) string[] databaze
+
+"Databaze" is a collection of all starting positions, which were used for testing. All of them are in FEN-like format (see FenToStr and TightFenToChar, 2F/a)
+The normal starting position is at index 3.
 
 2C) Evaluation
 
@@ -561,10 +566,83 @@ Due to hash collisions and wrong evaluation, I have abandoned this idea, as well
 
 Returns evaluation of position reached by the best moves of both sides.
 
+3F) Notation, initializing
+
+a) string FenToStr(string fen),
+char[] TightFenToChar(string fen)
+
+The first function takes as input the pseudo-fen string from the databaze array (see 2B/d), clears spaces from it, and replaces numbers 
+(used for indicate series of blank squares) with hyphens "-".
+The output of this function is used as input to the second function.
+
+The second function takes output of the first function. 
+Sets the bits of Position variable (see 2A/c) accordingly to the input string (castling, en-passant square, color-to-move)
+and returns a char array which represents the board (one char = one square).
+
+b) ulong[] Initialize(int idvychozi)
+
+Function which launches the new game. The "idvychozi" is the index of position in databaze array (2B/d).
+Functions FenToStr and TightFenToChar reads the pseudo-fen string of the position (see 3F/a).
+After that, the 64-char array is used to change pieces' bitboards for the current position (see CreateBBoards 3F/c) 
+and hash for current position is created (see HashPosition 3F/d)
+Returns Bitboards of current pieces.
+
+c) ulong[] CreateBBoards(char[] board)
+
+Scans the char array and adds the corresponding piece to each bitboard (See BitBoards 2A/a).
+
+d) ulong HashPosition(ulong[] rgn)
+
+Scans each bitboard and Position integer, returns a Zobrist hash of these factors (See 2A/e).
+
 II. Form
 
 1) Purpose
 
- 
+The main purpose of the form is to bring each position of chess game into graphical form, and display it as traditional chess board.
+Controls allow user to:
 
+- make moves on their own (with the help of showing possible moves)
+- change the game settings (AI depth, colors of human and AI player)
+- flip the board (to see from opposite player's perspective)
+- see into computer's way of thinking (which moves it thinks are the best)
+
+2) Layout
+
+a) panel1
+
+The first panel is the biggest one and contains chess board with its coordinates.
+Its height is automatically set to match its width. 
+
+The chess board consists of 64 buttons, where each square matches one button, this allows the user to control pieces. 
+A position of each button is determined by its index. 
+In case of flipped board, each index is subtracted from 64 and the resulting number determines its position.
+
+On the edge of board, coordinates are being shown: ranks next to the left edge, files below the bottom edge.
+Flipping the board changes coordinates accordingly.
+
+b) panel2
+
+Height of this panel depends on the size of panel1 (see 2/a) and is positioned at its left side.
+
+This panel contains various board controls. (e.g. flip, new game).
+Most of them are square, with size being half the width of whole panel.
+
+c) panel3
+
+Width of this panel depends on the size of panel1 (see 2/a) and is positioned below it.
+
+This panel contains textboxes with game-related information (e.g. state of game end) and also pawn promotion menu.
+
+3) Buttons
+
+a) Board buttons
+
+Each button on board represents one square. Clicking a button can results in different actions:
+- light or dark background: If a piece belongs to the currently moving player, highlights the piece and all squares where this piece is allowed to move with green color. Otherwise does nothing.
+- highlighted square: If an empty square or opponent's piece, makes a move on this position with currently highlighted piece. If a player clicked on highlighed piece, de-highlights all squares.
+
+b) Promotion buttons
+
+These buttons only show and get enabled when a pawn is supposed to move on the last rank.
 

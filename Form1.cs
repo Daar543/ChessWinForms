@@ -343,11 +343,12 @@ namespace Sachy_Obrazky
         int intelAI = 2;
 
 
-        public int GoNextMove(Engine enj)
+        public int GoNextMove(Engine enj) //move made by computer
         {
+            
             moveMade = false;
             int mov = enj.ComputersMove(white,gamelength, white?intelWhite:intelBlack);
-            string textforbox = "";
+            string textforbox = enj.analysisEvaluation.ToString() + " ";
             for(int i = 0; i < enj.pvmoves.Length; ++i)
             {
                 if (enj.pvmoves[i] == "Ka8-a8")
@@ -367,7 +368,7 @@ namespace Sachy_Obrazky
             return y;
         }
 
-        public int PlayNextMove(Engine enj, uint move)
+        public int PlayNextMove(Engine enj, uint move) //move made by player
         {
             enj.PlayersMove(white, gamelength, move);
             notation = enj.Notation;

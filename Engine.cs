@@ -7,6 +7,7 @@
     using System.Collections.Generic;
     using System.Collections.Concurrent;
     using System.Diagnostics;
+    using System.Linq;
     using System.Collections;
     using System.Runtime.InteropServices;
 
@@ -56,6 +57,21 @@
 
         public static readonly int[][] Posit_Values = new int[][]
         {
+
+            //empty(for testing)
+            /*
+            new int[]
+            {
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            };
+            */
             //king early/mid
             new int[]
             {
@@ -77,22 +93,45 @@
                  0,  5, 10, 15, 15, 10,  5,  0,
                -10,  0,  5,  5,  5,  5,  0,-10,
                 -5, -5,-10,  0,  0,-10, -5, -5,
-                -5, 10, 10,  0,  0, 10, 10, -5,
+                 0,  5, 10,  0,  0, 10,  5,  0,
                  0,  0,  0,  0,  0,  0,  0,  0
             },
             //knight
             new int[]
-            {
-                -40,-30,-20,-20,-20,-20,-30,-40,
-                -30,-10,  0,  0,  0,  0,-10,-30,
-                -20,  0, 10, 15, 15, 10,  0,-20,
-                -10,  5, 15, 25, 25, 15,  5,-10,
-                -10,  0, 15, 25, 25, 15,  0,-10,
-                -20,  5, 10, 15, 15, 10,  5,-20,
-                -30,-10,  0,  5,  5,  0,-10,-30,
-                -40,-30,-20,-20,-20,-20,-30,-40,
+            { 
+                -25,-20,-15,-15,-15,-15,-20,-25,
+                -20, -5,  0,  0,  0,  0, -5,-20,
+                -15,  0,  5,  5,  5,  5,  0,-15,
+                -15,  5, 10, 15, 15, 10,  5,-15,
+                -15,  0, 10, 15, 15, 10,  0,-15,
+                -15,  0,  5,  5,  5,  5,  0,-15,
+                -20, -5,  0,  5,  5,  0, -5,-20,
+                -25,-20,-15,-15,-15,-15,-20,-25,
             },
-            //bishosh
+            /*new int[]
+            {
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            },*/
+            /*new int[]
+            {
+                -10, -5, -5, -5, -5, -5, -5,-10,
+                 -5, -5,  0,  0,  0,  0, -5, -5,
+                 -5,  0,  5,  7,  7,  5,  0, -5,
+                 -5,  5,  7, 10, 10,  7,  5, -5,
+                 -5,  0,  7, 10, 10,  7,  0, -5,
+                 -5,  0,  5,  7,  7, 5,  0, -5,
+                 -5, -5,  0,  0,  0,  0, -5, -5,
+                -10, -20, -5, -5, -5, -5, -20,-10,
+            },*/
+
+            //bishop
             new int[]
             {
                 -20,-10,-10,-10,-10,-10,-10,-20,
@@ -107,14 +146,14 @@
             //rook
             new int[]
             {
-                0,  0,  0,  0,  0,  0,  0,  0,
-                5, 10, 10, 10, 10, 10, 10,  5,
+                 0,  0,  0,  0,  0,  0,  0,  0,
+                 5, 10, 10, 10, 10, 10, 10,  5,
                 -5,  0,  0,  0,  0,  0,  0, -5,
                 -5,  0,  0,  0,  0,  0,  0, -5,
                 -5,  0,  0,  0,  0,  0,  0, -5,
                 -5,  0,  0,  0,  0,  0,  0, -5,
                 -5,  0,  0,  0,  0,  0,  0, -5,
-                0,  0,  0,  5,  5,  5,  0,  0
+                 0,  0,  0,  0,  0,  0,  0,  0,
             },
             //queen
             new int[]
@@ -140,6 +179,17 @@
                 -30,-30,  0,  0,  0,  0,-30,-30,
                 -50,-30,-30,-30,-30,-30,-30,-50
             },
+        };
+        public static readonly int[] PassPawnBuff = new int[64]
+        {
+                 0,  0,  0,  0,  0,  0,  0,  0,
+                 0, 15, 15, 15, 15, 15, 15,  0,  //7th rank already considered in default, but this extra is for low material as well
+                15, 30, 30, 30, 30, 30, 30, 15,
+                10, 20, 20, 20, 20, 20, 20, 10,
+                10, 20, 20, 20, 20, 20, 20, 10,
+                 5, 10, 10, 10, 10, 10, 10,  5,
+                 5, 15, 15, 15, 15, 15, 15,  5,
+                 0,  0,  0,  0,  0,  0,  0,  0
         };
 
         const ulong blacksquares = 0xAA55AA55AA55AA55;
@@ -207,7 +257,7 @@
         static int Wking;
         static int Bking;
         static ulong CurrentHash;
-        public static Dictionary<uint, Hashentry>[] TranspoTable;
+        public static Dictionary<ulong, Hashentry>[] TranspoTable;
         public string Notation { get; set; } = "";
 
         const int
@@ -216,17 +266,36 @@
 
 
         static int HammingWeight(ulong x)
-        {   //from Stack Overflow
+        {  
             //returns amount of set bits in given ulong
-            x = (x & 0x5555555555555555) + ((x >> 1) & 0x5555555555555555); //put count of each  2 bits into those  2 bits 
-            x = (x & 0x3333333333333333) + ((x >> 2) & 0x3333333333333333); //put count of each  4 bits into those  4 bits 
-            x = (x & 0x0f0f0f0f0f0f0f0f) + ((x >> 4) & 0x0f0f0f0f0f0f0f0f); //put count of each  8 bits into those  8 bits 
-            x = (x & 0x00ff00ff00ff00ff) + ((x >> 8) & 0x00ff00ff00ff00ff); //put count of each 16 bits into those 16 bits 
-            x = (x & 0x0000ffff0000ffff) + ((x >> 16) & 0x0000ffff0000ffff); //put count of each 32 bits into those 32 bits 
-            x = (x & 0x00000000ffffffff) + ((x >> 32) & 0x00000000ffffffff); //put count of each 64 bits into those 64 bits 
+            x = (x & 0x5555555555555555) + ((x >> 1) & 0x5555555555555555); //put count of each 2^n bits into those 2^n bits 
+            x = (x & 0x3333333333333333) + ((x >> 2) & 0x3333333333333333);  
+            x = (x & 0x0f0f0f0f0f0f0f0f) + ((x >> 4) & 0x0f0f0f0f0f0f0f0f);  
+            x = (x & 0x00ff00ff00ff00ff) + ((x >> 8) & 0x00ff00ff00ff00ff); 
+            x = (x & 0x0000ffff0000ffff) + ((x >> 16) & 0x0000ffff0000ffff);  
+            x = (x & 0x00000000ffffffff) + ((x >> 32) & 0x00000000ffffffff); 
             return (int)x;
         }
         //public static ulong[] Bitboards = new ulong[12];
+
+        static bool ArraysMatching(ref ulong[]arr1,ref ulong[] arr2)
+        {
+            if(arr1 is null)
+            {
+                return (arr2 is null);
+            }
+            else if (arr1.Length != arr2.Length)
+                return false;
+            else
+            {
+                for(int i = 0; i < arr1.Length; ++i)
+                {
+                    if (arr1[i] != arr2[i])
+                        return false;
+                }
+            }
+            return true;
+        }
         static ulong Land_Moves(int[] Directions, int index, ulong WhiteBoard, ulong BlackBoard, ulong Block, bool white)
         {
             //generates moves in every direction, and then zeroes the one which would land on piece of the same color
@@ -1425,6 +1494,88 @@
             return moves;
         }
         
+        static ulong PassedPawnCheck(int idx, bool white) //returns bitboard of pawns which can block passed pawn on that index
+        //e.g. e4 returns squares on files/lines d-f/6-7 and e5
+        {
+            ulong blo = 0;
+            int file = idx & 0b000111;
+            int row = idx >> 3;
+            if ((white && row <= 1)||(!white && row >= 6)) 
+                return 0; //row 7
+            int sq = ((white?row-1:row+1) * 8) + file;
+                blo |= ((ulong)1) << sq;
+            for (int i = file-1; i<= file+1; ++i) //next files
+            {
+                if (i > 8 || i < 0)
+                    continue;
+                if (white)
+                {
+                    for (int j = row - 2; j >= 1; --j) //until row 7
+                    {
+                        sq = j * 8 + i;
+                        blo |= ((ulong)1) << sq;
+                    }
+                }
+                else
+                {
+                    for (int j = row + 2; j <= 6; ++j) //until row 7
+                    {
+                        sq = j * 8 + i;
+                        blo |= ((ulong)1) << sq;
+                    }
+                }
+                
+            }
+            return blo;
+        }
+        static ulong[] initPassPawn(bool white)
+        {
+            ulong[] pp = new ulong[64];
+            for(int i = 0; i < 64; ++i)
+            {
+                pp[i] = PassedPawnCheck(i, white);
+            }
+            return pp;
+        }
+        static readonly ulong[] PassPawnWhite = initPassPawn(true);
+        static readonly ulong[] PassPawnBlack = initPassPawn(false);
+
+        static ulong FreeFile(int idx, bool white) //returns free file from the perspective towards enemy
+        {
+            ulong bib = 0;
+            int file = idx & 0b000111;
+            int row = idx >> 3;
+            int sq;
+            if(white)
+            {
+                for (int i = row - 1; i >= 0; --i)
+                {
+                    sq = i * 8 + file;
+                    bib |= ((ulong)1) << sq;
+                }
+            }
+            else
+            {
+                for (int i = row + 1; i < 8; ++i)
+                {
+                    sq = i * 8 + file;
+                    bib |= ((ulong)1) << sq;
+                }
+            }
+            return bib;
+        }
+        static ulong[] initFreeFile(bool white)
+        {
+            ulong[] pp = new ulong[64];
+            for (int i = 0; i < 64; ++i)
+            {
+                pp[i] = FreeFile(i, white);
+            }
+            return pp;
+        }
+        static readonly ulong[] FreeFileWhite = initFreeFile(true);
+        static readonly ulong[] FreeFileBlack = initFreeFile(false);
+
 
         public static bool Bit(ulong bitboard, int Pos)
         {
@@ -2199,8 +2350,7 @@
             public int ancient;
             public uint move;
             public uint[] pv;
-            public ulong WM;
-            public ulong BM;
+            public ulong[] BBS;
 
             public Hashentry(ulong zobrist, int depth, int flag,
                              int eval, int ancient, uint move)
@@ -2222,8 +2372,7 @@
             }
         }
 
-        
-        public static int AlphaBeta_Rewritten(int currdepth, int maxdepth, int alpha, int beta, bool white, uint[] pline, bool evaluation_system)
+        public static int AlphaBeta_Rewritten(int currdepth, int maxdepth, int alpha, int beta, bool white, uint[] pline, int evaluation_random)
         {
             NodesSearched += 1;
             int AlphaOrig = alpha;
@@ -2234,63 +2383,60 @@
 
             if (currdepth >= maxdepth) //or end...
             {
-                return Quisce(alpha, beta, white, evaluation_system);
+                return Quisce(alpha, beta, white, evaluation_random);
                 //return Evaluation();
             }
 
-            bool Intable = (TranspoTable[currdepth].TryGetValue((ushort)(CurrentHash), out entry)); //checks the transpo table
-            if (Intable && /*entry.depth == currdepth &&*/ entry.zobrist == CurrentHash && entry.WM == Wmask && entry.BM == Bmask) //check the whole hash, in case of collishns
+            bool Intable = (TranspoTable[currdepth].TryGetValue(CurrentHash, out entry)); //checks the transpo table
+            if (Intable && /*entry.depth == currdepth &&*/ entry.zobrist == CurrentHash)
             {
-                if (entry.flag == 1) //exact - same as beta in the moment of evaluation
+                if (ArraysMatching(ref entry.BBS,ref BitBoards))//Enumerable.SequenceEqual(entry.BBS, BitBoards)) //check the whole hash, in case of collishns
                 {
-                    return entry.eval;
-                }
-                else if (entry.flag == 2) //upper - more than beta in the moment of evaluation
-                {
-                    beta = Math.Min(beta, entry.eval);
-                }
-                else if (entry.flag == 0) //lower - less than beta in the moment of evaluation
-                {
-                    if (entry.eval > alpha)
+                    if (entry.flag == 1) //exact - same as beta in the moment of evaluation
                     {
-                        alpha = entry.eval;
-                        if (alpha <= beta)
+                        return entry.eval;
+                    }
+                    else if (entry.flag == 2) //upper - more than beta in the moment of evaluation
+                    {
+                        beta = Math.Min(beta, entry.eval);
+                    }
+                    else if (entry.flag == 0) //lower - less than beta in the moment of evaluation
+                    {
+                        if (entry.eval > alpha)
                         {
-                            //change principal variation
-                            int borderindex = maxdepth - currdepth;
-                            int t = 0;
-                            for (int l = 0; entry.pv[l] != 0; ++l)
+                            alpha = entry.eval;
+                            if (alpha <= beta)
                             {
-                                t++;
+                                //change principal variation
+                                if (line[0] != 0 || pline[0] != 0)
+                                {
+                                    int t = 0;
+                                    for (int l = 0; entry.pv[l] != 0; ++l)
+                                    {
+                                        t++;
+                                    }
+                                    int s = 0;
+                                    for (int l = 0; line[l] != 0; ++l)
+                                    {
+                                        s++;
+                                    }
+                                    //appends the current move to the rest
+                                    pline = entry.pv;
+                                    Array.Copy(line, 0, pline, t, s);
+                                }
                             }
-                            //pline[0] = entry.move;
-
-                            //copy this:
-                            /*
-                                line, //which move we start
-                                pline + 1, //max moves from current line, increased length
-                                line.totalmoves * sizeof(uint) //how many of the integers 
-                             */
-                            //first element of pline stays, and the whole "line" gets added
-                            int s = 0;
-                            for (int l = 0; line[l] != 0; ++l)
-                            {
-                                s++;
-                            }
-                            pline = entry.pv;
-                            Array.Copy(line, 0, pline, t, s);
-                            //Array.Copy(line, 0, pline, 1, s);
                         }
                     }
-                }
-                if (alpha >= beta)
-                {
-                    return entry.eval;
+                    if (alpha >= beta)
+                    {
+                        return entry.eval;
+                    }
                 }
             }
+            
             if (currdepth >= maxdepth) //or end...
             {
-                return Quisce(alpha, beta, white, evaluation_system);
+                return Quisce(alpha, beta, white, evaluation_random);
                 //return Evaluation();
             }
             uint[] mvs = white ? MoveGeneration_White(BitBoards).ToArray() : MoveGeneration_Black(BitBoards).ToArray();
@@ -2339,7 +2485,7 @@
                 }
                 else
                 {
-                    curreval = -AlphaBeta_Rewritten(currdepth + 1, maxdepth, -beta, -alpha, !white, line, evaluation_system);
+                    curreval = -AlphaBeta_Rewritten(currdepth + 1, maxdepth, -beta, -alpha, !white, line, evaluation_random);
                 }
 
                 UndoMove(mvm, white);
@@ -2381,13 +2527,19 @@
             }
 
 
-            Hashentry next = new Hashentry(maxdepth);
-            next.depth = currdepth;
-            next.eval = BestValue;
-            next.zobrist = CurrentHash;
-            next.move = currentBest;
-            next.WM = Wmask;
-            next.BM = Bmask;
+            Hashentry next = new Hashentry(maxdepth)
+            {
+                depth = currdepth,
+                eval = BestValue,
+                zobrist = CurrentHash,
+                move = currentBest,
+                BBS = new ulong[12],
+                pv = pline
+            };
+            for (int i = 0; i < 12; i++)
+            {
+                next.BBS[i] = BitBoards[i];
+            }
             if (BestValue <= AlphaOrig)
             {
                 next.flag = 2;
@@ -2400,15 +2552,15 @@
             {
                 next.flag = 1;
             }
-            if (!TranspoTable[currdepth].ContainsKey((ushort)(next.zobrist)))
+            if (!TranspoTable[currdepth].ContainsKey(next.zobrist))
             {
-                TranspoTable[currdepth].Add((ushort)next.zobrist, next);
+                TranspoTable[currdepth].Add(next.zobrist, next);
             }
 
 
             return alpha;
         }
-
+        
         public static bool Bit(int number, int Pos)
         {
             return (((number) & (1 << Pos)) != 0);
@@ -2505,6 +2657,15 @@
                 items[j] = temp;
             }
         }
+        //Game state
+        public bool IsCheck_White()
+        {
+            return (Attacked(Wking, Wmask, Bmask, Block, false, BitBoards));
+        }
+        public bool IsCheck_Black()
+        {
+            return (Attacked(Bking, Wmask, Bmask, Block, true, BitBoards));
+        }
         public static bool NoProgress()
         {
             //no progress: at least 50 blank moves, that is 100 plies
@@ -2566,7 +2727,7 @@
                 result = 1;
             }
             swr.Close();
-            RewritePartia("partie.txt");
+            RewritePartia("partie.txt","prepsana");
             return result;
         }
 
@@ -2592,7 +2753,7 @@
             swr.Write(" 1/2");
             swr.Close();
 
-            RewritePartia("partie.txt");
+            RewritePartia("partie.txt", "prepsana");
         }
 
         public static string Rewrite(string notation)
@@ -2624,7 +2785,7 @@
 
         }
 
-        public static void RewritePartia(string paf)
+        public static void RewritePartia(string paf, string output)
         {
             //opens the "partie" and rewrites it
 
@@ -2634,7 +2795,7 @@
 
             string pre = Rewrite(par);
 
-            var sw = new StreamWriter("prepsana.txt", false);
+            var sw = new StreamWriter(output+".txt", false);
             sw.Write(pre);
             sw.Close();
             return;
@@ -2718,6 +2879,23 @@
                         if ((BitBoards[i] & bita) != 0) //for the corresponding piece...
                         {
                             evwhite += Values[i] + Posit_Values[i][j];
+                            //extra value for positional piece
+                            switch (i)
+                            {
+                                case 1: //bonus for passed pawns
+                                    if ((PassPawnWhite[j] & BitBoards[7]) == 0) //no bpawns blocking way
+                                    {
+                                        evwhite += PassPawnBuff[j];
+                                    }
+                                    break;
+                                case 4: //free file bonus
+                                case 5:
+                                    if((FreeFileWhite[j] & BitBoards[1]) == 0) //no wpawns blocking file ahead of rook
+                                    {
+                                        evwhite += i==4 ? 15:5 ;
+                                    }
+                                    break;
+                            }
                             break;
                         }
                     }
@@ -2730,11 +2908,11 @@
 
             if (((BitBoards[3] & blacksquares) != BitBoards[3]) && (((BitBoards[3] & whitesquares) != BitBoards[3])))
             {
-                evwhite += 40; //0.4 pawn for bishops on different colors
+                evwhite += 35; //0.35 pawn for bishops on different colors
             }
             if (((BitBoards[9] & blacksquares) != BitBoards[9]) && (((BitBoards[9] & whitesquares) != BitBoards[9])))
             {
-                evblack += 40;
+                evblack += 35;
             }
 
 
@@ -2748,6 +2926,23 @@
                         if ((BitBoards[i + 6] & bita) != 0) //for the corresponding piece...
                         {
                             evblack += Values[i] + Posit_Values[i][j ^ 0b111000];
+                            //extra value for positional piece
+                            switch (i)
+                            {
+                                case 7: //bonus for passed pawns
+                                    if ((PassPawnBlack[j] & BitBoards[1]) == 0) //no wpawns blocking way
+                                    {
+                                        evblack += PassPawnBuff[j];
+                                    }
+                                    break;
+                                case 10: //free file bonus
+                                case 11:
+                                    if ((FreeFileBlack[j] & BitBoards[7]) == 0) //no bpawns blocking file ahead of rook
+                                    {
+                                        evblack += i==10 ? 15:5;
+                                    }
+                                    break;
+                            }
                             break;
                         }
                     }
@@ -2756,7 +2951,7 @@
             }
 
 
-            if (evwhite + evblack > 2000) //early or mid game
+            if (evwhite + evblack > 3500) //early or mid game
             {
                 evwhite += Posit_Values[0][Wking];
                 evblack += Posit_Values[0][Bking ^ 0b111000];
@@ -2766,14 +2961,66 @@
                 evwhite += Posit_Values[6][Wking];
                 evblack += Posit_Values[6][Bking ^ 0b111000];
             }
+            int ix = 0;
+            if(evwhite + evblack > 7000)
+            {
+                ix = BlockedOpening();
+            }
             //return evwhite - evblack; 
 
             //random evaluation favors more active positions
-            return evwhite - evblack;
+            return evwhite - evblack + ix;
 
         }
 
-
+        static int BlockedOpening() //returns integer which expresses the total penalties for having blocked opening (e.g. pawns)
+        {
+            int eva = 0;
+            //d4xd5; B/Ne3, Pe2, Bf1
+            if(Bit(BitBoards[1],52) && (Bit(BitBoards[2],44)||Bit(BitBoards[3],44)) && Bit(BitBoards[3],61))
+            {
+                eva -= 30;
+            }
+            if (Bit(BitBoards[7], 12)&& Bit(BitBoards[9], 5) && (Bit(BitBoards[8],20)||Bit(BitBoards[9], 20)))
+            {
+                eva += 30;
+            }
+            //d4xd5,Nc3,Pc2
+            if (Bit(BitBoards[1], 35) && Bit(BitBoards[1], 50) && Bit(BitBoards[2], 42) && Bit(BitBoards[7], 27))
+            {
+                eva -= 30;
+            }
+            if (Bit(BitBoards[1], 35) && Bit(BitBoards[7], 10) && Bit(BitBoards[7], 27) && Bit(BitBoards[8], 18))
+            {
+                eva += 30;
+            }
+            //e4xe5,B/Nd3,Pd2,Bc1
+            if (Bit(BitBoards[1], 53) && (Bit(BitBoards[2], 43)||Bit(BitBoards[3],43)) && Bit(BitBoards[3], 58) )
+            {
+                eva -= 30;
+            }
+            if (Bit(BitBoards[7], 11) && Bit(BitBoards[9], 2) && (Bit(BitBoards[8],19) || Bit(BitBoards[9], 19)))
+            {
+                eva += 30;
+            }
+            if(Bit(BitBoards[1],48) && Bit(BitBoards[1],41) && Bit(BitBoards[1],50) && Bit(BitBoards[3],49)) //treehouse
+            {
+                eva += 15;
+            }
+            if (Bit(BitBoards[1], 53) && Bit(BitBoards[1], 55) && Bit(BitBoards[1], 46) && Bit(BitBoards[3], 54)) //treehouse
+            {
+                eva += 15;
+            }
+            if (Bit(BitBoards[7], 8) && Bit(BitBoards[7], 17) && Bit(BitBoards[7], 10) && Bit(BitBoards[9], 9)) //treehouse
+            {
+                eva -= 15;
+            }
+            if (Bit(BitBoards[7], 15) && Bit(BitBoards[7], 13) && Bit(BitBoards[7], 22) && Bit(BitBoards[9], 14)) //treehouse
+            {
+                eva -= 15;
+            }
+            return eva;
+        }
 
         public static void SortMoves(uint[] moves)
         { //sorts moves by captured and capturing strength
@@ -2820,10 +3067,10 @@
             Console.WriteLine("Hloubka? ");
             int depth_base = int.Parse(Console.ReadLine());
             int deph = depth_base;
-            TranspoTable = new Dictionary<uint, Hashentry>[depth_base + 4];
+            TranspoTable = new Dictionary<ulong, Hashentry>[deph+4];
             for (int k = 0; k < TranspoTable.Length; ++k)
             {
-                TranspoTable[k] = new Dictionary<uint, Hashentry>();
+                TranspoTable[k] = new Dictionary<ulong, Hashentry>();
             }
             string nota = "";
 
@@ -2871,7 +3118,7 @@
                 uint[] principalVariation = new uint[deph + (player ? 0 : -1)];
                 for (int k = 0; k < TranspoTable.Length; ++k)
                 {
-                    TranspoTable[k] = new Dictionary<uint, Hashentry>();
+                    TranspoTable[k] = new Dictionary<ulong, Hashentry>();
                 }
                 if (player || !player)
                 {
@@ -2881,7 +3128,7 @@
                     swplay.Start();
 
                     // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, false); //no random
-                    ab = AlphaBeta_Rewritten(0, deph + (player ? 0 : -1), int.MinValue + 10, int.MaxValue - 10, player, principalVariation, true); //both random
+                    ab = AlphaBeta_Rewritten(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, 20); //both random
                                                                                                                                                    // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? true : false); //white random
                                                                                                                                                    // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? false : true); //black random
 
@@ -3117,11 +3364,11 @@
             else
             {
             }
-            /*TranspoTable = new Dictionary<uint, Hashentry>[deph];
+            TranspoTable = new Dictionary<ulong, Hashentry>[deph];
             for (int k = 0; k < TranspoTable.Length; ++k)
             {
-                TranspoTable[k] = new Dictionary<uint, Hashentry>();
-            }*/
+                TranspoTable[k] = new Dictionary<ulong, Hashentry>();
+            }
             var swplay = new Stopwatch();
 
             NodesSearched = 0;
@@ -3136,18 +3383,18 @@
             if (true)
             {
                 NodesSearched = 0;
-                swplay.Start();
+                //swplay.Start();
 
                 // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, false); //no random
-                ab = AlphaBeta(0, deph /*+ (player ? 0 : -1)*/, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, true); //both random
-                                                                                                                                         // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? true : false); //white random
-                                                                                                                                         // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? false : true); //black random
+                // ab = AlphaBeta(0, deph /*+ (player ? 0 : -1)*/, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, true); //both random
+                // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? true : false); //white random
+                // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? false : true); //black random
 
-                //ab = AlphaBeta_Rewritten(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, false);
+                ab = AlphaBeta_Rewritten(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player?30:30);
                 analysisEvaluation = ab;
-                swplay.Stop();
-                TimeSpent = swplay.ElapsedMilliseconds;
-                swplay.Reset();
+                // swplay.Stop();
+                //TimeSpent = swplay.ElapsedMilliseconds;
+                // swplay.Reset();
 
                 princvar = principalVariation;
                 pvmoves = new string[princvar.Length];
@@ -3530,7 +3777,7 @@
             }
         }
 
-        public static int AlphaBeta(int currdepth, int maxdepth, int alpha, int beta, bool white, uint[] pline, bool evaluation_system)
+        public static int AlphaBeta(int currdepth, int maxdepth, int alpha, int beta, bool white, uint[] pline, int evaluation_random)
         {
 
             //var ss = new Stopwatch();
@@ -3542,7 +3789,7 @@
             if (currdepth >= maxdepth)
             {
                 NodesSearched += 1;
-                int ira = Quisce(int.MinValue + 10, int.MaxValue - 10, white, evaluation_system);
+                int ira = Quisce(int.MinValue + 10, int.MaxValue - 10, white, evaluation_random);
 
                 /*ss.Stop();
                 Console.WriteLine("{0}. {1}", NodesSearched, ss.Elapsed);
@@ -3585,7 +3832,7 @@
                 }
                 end = false;
 
-                curreval = -AlphaBeta(currdepth + 1, maxdepth, -beta, -alpha, !white, line, evaluation_system);
+                curreval = -AlphaBeta(currdepth + 1, maxdepth, -beta, -alpha, !white, line, evaluation_random);
 
                 //returns back
                 UndoMove(mvm, white);
@@ -3639,9 +3886,9 @@
             return alpha;
         }
 
-        static int Quisce(int alpha, int beta, bool white, bool evaluation_system) 
+        static int Quisce(int alpha, int beta, bool white, int evaluation_random) 
         {
-            int staticEval = 0;
+            int staticEval;
             if (InsufMaterial())
             {
                 staticEval = 0;
@@ -3649,46 +3896,21 @@
             else
             {
                 staticEval =
-                evaluation_system ?
-                (Evaluation() + los.Next(-25, +26))
-                : Evaluation();
+                Evaluation() + los.Next(-evaluation_random, +evaluation_random + 1);
 
                 staticEval *= (white ? 1 : -1);
             }
-            
-            //if there is no good capture, consider the score of position good as it is
-            if (staticEval >= beta)
-                return beta;
             if (alpha < staticEval)
             {
                 alpha = staticEval;
-                //add principal variation here
-                /*pline[0] = emptymove;
-                //if (pline[0] != 0 || line[0] != 0)
-                {
-                    int s = 0;
-                    int p = 0;
-                    for (int l = 0; l < line.Length; ++l)
-                    {
-                        if (line[l] == 0)
-                        {
-                            s = l;
-                            break;
-                        }
-                    }
-                    for (int l = 0; l < pline.Length; ++l)
-                    {
-                        if (pline[l] == 0)
-                        {
-                            p = l;
-                            break;
-                        }
-                    }
-                    //Array.Resize(ref pline, s + p+1);
-                    Array.Copy(line, 0, pline, 1, s);
-                }*/
-
             }
+            //if there is no good capture, consider the score of position good as it is
+            if (alpha >= beta)
+            {
+                return staticEval;
+            }
+                
+            
             uint[] mvs = white ? CapsGeneration_White(BitBoards).ToArray() : CapsGeneration_Black(BitBoards).ToArray();
 
             int curreval;
@@ -3728,7 +3950,7 @@
                 }
 
 
-                curreval = -Quisce(-beta, -alpha, !white, evaluation_system);
+                curreval = -Quisce(-beta, -alpha, !white, evaluation_random);
                 UndoMove(mvm, white);
 
 
@@ -3751,31 +3973,6 @@
                 if (curreval > alpha)
                 {
                     alpha = curreval;
-                    //increase the PV 
-                    /*pline[0] = donemove;
-                    int s = 0;
-                    int p = 0;
-                    for (int l = 0; l < line.Length; ++l)
-                    {
-                        if (line[l] == 0)
-                        {
-                            s = l;
-                            break;
-                        }
-                    }
-                    for (int l = 0; l < pline.Length; ++l)
-                    {
-                        if (pline[l] == 0)
-                        {
-                            p = l;
-                            break;
-                        }
-                    }
-                    //Array.Resize(ref pline, s + p+1);
-                    Array.Copy(line, 0, pline, 1, s);
-                    //Array.Copy(pline, ref line +1, line.totalmoves+1);
-                    pline.totalmoves = line.totalmoves + 1;
-                    */
                 }
             }
 
@@ -3793,7 +3990,7 @@
             "k7/8/6RR/8/8/8/8/2K5/ ---- w --", //rychly mat
             "7k/8/8/8/8/8/8/K7/ ---- w --", //jen kralove
             "k3b3/1p1p1p1p/1P1P1P1P/8/8/1p1p1p1p/1P1P1P1P/K3B3/ ---- w --", //kompletni blokada
-            "8/3q4/1K3k2/r7/6R1/8/8/8/ ---- b --", //nenalezeny mat za cerneho
+            "8/3q4/1K3k2/r7/6R1/8/8/8/ ---- b --", //mat za cerneho
             "4Q3/2b3pk/P6p/7P/4p3/8/5P1q/5RK1/ ---- w --", //mat nebo pat
             "KR6/8/5k2/7p/8/8/8/8/ ---- w --", //vez proti pesci (musis zabranit opakovani)
             };
@@ -3804,149 +4001,14 @@
             string pozice = databaze[idvychozi];
             //byte rosad = rosady[pz - 1];
             char[] ka = TightFenToChar(FenToStr(pozice));
-            bool zacina = !((Position & (1 << 4)) == 0);
             Wmask = 0;
             Bmask = 0;
                 
             BitBoards = CreateBBoards(ka);
-            //int[] AllPieces = CreatePieces(ka);
-            /*for (int i = 0; i < 64; ++i)
-            {
-                if (ka[i] != '\0')
-                {
-                    switch (ka[i])
-                    {
-                        case 'p':
-                        case 'k':
-                        case 'n':
-                        case 'b':
-                        case 'r':
-                        case 'q':
-                            Bmask |= (((ulong)(1)) << i);
-                            break;
-                        case 'P':
-                        case 'K':
-                        case 'N':
-                        case 'B':
-                        case 'R':
-                        case 'Q':
-                            Wmask |= (((ulong)(1)) << i);
-                            break;
-                    }
-                }
-            }*/
             Remask();
-            //Block = Wmask | Bmask;
-
-            //Printout(BitBoards);
-            //ulong h = HashPosition(HashSeed);
             CurrentHash = HashPosition(HashSeed);
-            //Console.WriteLine("{0:X}", h);
-            //Play(zacina);
-            //return;
 
             return BitBoards;
-        }
-        public static void Start()
-        {
-            
-            for (int j = 0; j < 1; ++j)
-            {
-                //Console.WriteLine("Vyber si pozici");
-                int pozid = int.Parse(Console.ReadLine());
-                //int pozid = j;
-                string pozice = databaze[pozid];
-                //byte rosad = rosady[pz - 1];
-                char[] ka = TightFenToChar(FenToStr(pozice));
-                bool zacina = !((Position & (1 << 4)) == 0);
-                Wmask = 0;
-                Bmask = 0;
-                BitBoards = CreateBBoards(ka);
-                int[] AllPieces = CreatePieces(ka);
-                for (int i = 0; i < 64; ++i)
-                {
-                    if (ka[i] != '\0')
-                    {
-                        switch (ka[i])
-                        {
-                            case 'p':
-                            case 'k':
-                            case 'n':
-                            case 'b':
-                            case 'r':
-                            case 'q':
-                                Bmask |= (((ulong)(1)) << i);
-                                break;
-                            case 'P':
-                            case 'K':
-                            case 'N':
-                            case 'B':
-                            case 'R':
-                            case 'Q':
-                                Wmask |= (((ulong)(1)) << i);
-                                break;
-                        }
-                    }
-                }
-                Remask();
-                //Block = Wmask | Bmask;
-
-                //Printout(BitBoards);
-                List<uint> mvsh;
-
-                /*mvsh= MoveGeneration_White(BitBoards);
-                foreach (int move in mvsh)
-                {
-                    Console.WriteLine(DecodeMove(move));
-                }
-                mvsh = MoveGeneration_Black(BitBoards);
-                foreach (int move in mvsh)
-                {
-                    Console.WriteLine(DecodeMove(move));
-                }
-                for(int i = 0; i < 64; ++i)
-                {
-                    string sq = Squares[i];
-                    Console.WriteLine("{0} - {1},{2}", sq, Attacked(i, Wmask, Bmask, Block, true, BitBoards), Attacked(i, Wmask, Bmask, Block, false, BitBoards));
-                }*/
-                var los = new Random();
-                uint mov = 0;
-
-                string nota = "";
-
-                uint[] mvs;
-                uint[] mvm;
-                /*if (zacina)
-                {
-                    mvs = MoveGeneration_White(BitBoards).ToArray();
-                    Shuffle(mvs);
-                    for (int i = 0;i<=mvs.Length;++i)
-                    {
-                        mov = mvs[i];
-                        //mov = mvs[3];
-                        mvm = MakeMove(mov, true);
-                        if (Attacked(Wking, Wmask, Bmask, Block, false, BitBoards))
-                        {
-                            UndoMove(mvm, true);
-                        }
-                        else
-                            break;
-                    }
-                    Printout(BitBoards);
-                    Console.WriteLine(DecodeMove((int)mov));
-                    nota += DecodeMove((int)mov) + " ";
-                    var swr = new StreamWriter("partie.txt",false);
-                    swr.Write(nota);
-                    swr.Close();
-                }*/
-
-                ulong h = HashPosition(HashSeed);
-                //Console.WriteLine("{0:X}", h);
-                Play(zacina);
-                //return;
-
-            }
-            return ;
         }
     }
     public class ULongRandom

@@ -34,5 +34,5 @@ Tlačítkem "Save Notation" uložíte zápis partie do souboru "prepsana.txt".
 Pro převedení do PGN:
 
 - otevřete stránku http://www.caissa.com/chess-tools/pgn-editor.php a vyberte "Import PGN file"
-- zkopírujte obsah souboru "prepsana.txt" bez znaku # a výsledku na konci zápisu
+- zkopírujte obsah souboru "bin/Release/prepsana.txt" bez znaku # a výsledku na konci zápisu
 - řiďte se dalšími instrukcemi na dané stránce

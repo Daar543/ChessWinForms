@@ -35,7 +35,8 @@ namespace Sachy_Obrazky
         }
 
         const int StartingPos = 3;
-        const int MinimalMoveDelay = 250; //ms
+        const int MinimalMoveDelay = 1000; //ms
+        const int AutoSaveFreq = 5;
         static readonly Color light = Color.LightGray;
         static readonly Color dark = Color.Brown;
         static readonly Color clicked_own = Color.LightGreen;
@@ -85,7 +86,7 @@ namespace Sachy_Obrazky
             new Bitmap(Application.StartupPath + "\\Image\\" + PieceImages[1]),
             new Bitmap(Application.StartupPath + "\\Image\\" + PieceImages[2]),
         };*/
-        
+
 
         private void MakeBoard(bool flipped)
         {
@@ -103,15 +104,15 @@ namespace Sachy_Obrazky
 
                 //sets location 
                 ButtonBoard[i].Location = flipped ?
-                    new Point(panel1.Width / 9 + ((63-i) & 0b111) * size, ((63-i) >> 3) * size) :
+                    new Point(panel1.Width / 9 + ((63 - i) & 0b111) * size, ((63 - i) >> 3) * size) :
                     new Point(panel1.Width / 9 + (i & 0b111) * size, (i >> 3) * size);
-                    
+
 
                 //tag is according to index
                 ButtonBoard[i].Tag = i;
 
                 //text is determined by the normal notation rule
-                ButtonBoard[i].Text = ((char)((i&0b111) + 'a')).ToString() + ((8-(i >> 3)).ToString());
+                ButtonBoard[i].Text = ((char)((i & 0b111) + 'a')).ToString() + ((8 - (i >> 3)).ToString());
 
                 //click handler
                 ButtonBoard[i].Click += Button_Click;
@@ -123,14 +124,14 @@ namespace Sachy_Obrazky
                 var tx = rankCoords[i];
                 panel1.Controls.Add(tx);
 
-                tx.Font = new Font(tx.Font.FontFamily, panel1.Height/16); //for some reason, /16 works pretty well 
-                tx.Width = size/2;
+                tx.Font = new Font(tx.Font.FontFamily, panel1.Height / 16); //for some reason, /16 works pretty well 
+                tx.Width = size / 2;
                 tx.Text = (8 - i).ToString();
                 tx.Location = flipped ?
-                    new Point(panel1.Width / 9 - tx.Width, 
-                    (7-i) * size + (size - tx.Height) / 2) : //fixes diff between button height and textbox height
-                    new Point(panel1.Width / 9 - tx.Width, 
-                    i * size + ( size - tx.Height) /2 );
+                    new Point(panel1.Width / 9 - tx.Width,
+                    (7 - i) * size + (size - tx.Height) / 2) : //fixes diff between button height and textbox height
+                    new Point(panel1.Width / 9 - tx.Width,
+                    i * size + (size - tx.Height) / 2);
                 tx.Enabled = false;
                 tx.BringToFront();
             }
@@ -143,29 +144,23 @@ namespace Sachy_Obrazky
 
                 tx.Font = new Font(tx.Font.FontFamily, panel1.Height / 16);
                 tx.Width = size; //in order to fill the whole button-space
-                tx.Text = ((char)('a'+i)).ToString();
+                tx.Text = ((char)('a' + i)).ToString();
                 tx.TextAlign = HorizontalAlignment.Center;
                 tx.Location = flipped ?
-                    new Point((8-i) * size, panel1.Width - panel1.Width / 9) :
-                    new Point((1+i) * size, panel1.Width - panel1.Width / 9) ;
+                    new Point((8 - i) * size, panel1.Width - panel1.Width / 9) :
+                    new Point((1 + i) * size, panel1.Width - panel1.Width / 9);
                 tx.Enabled = false;
                 tx.BringToFront();
             }
             panel2.Height = panel1.Height;
             panel2.Location = new Point(panel1.Location.X - panel2.Width, panel1.Location.Y);
             panel3.Width = panel1.Width * 8 / 9;
-            panel3.Location = new Point(panel1.Location.X + panel1.Width / 9, panel1.Location.Y+panel1.Height);
+            panel3.Location = new Point(panel1.Location.X + panel1.Width / 9, panel1.Location.Y + panel1.Height);
             //endgame panel
             panel3.Controls.Add(KonecHry);
             KonecHry.Location = new Point(panel3.Location.X, panel3.Location.Y + panel3.Height - KonecHry.Height);
             KonecHry.Width = panel3.Width;
             KonecHry.Show();
-            /*var refbt = new Button();
-            panel1.Controls.Add(refbt);
-            refbt.Height = size;
-            refbt.Width = size;
-            refbt.BackColor = Color.Yellow;
-            refbt.Location = new Point(0, 0);*/
         }
 
         private void CreateOptions()
@@ -191,17 +186,17 @@ namespace Sachy_Obrazky
 
             //new game
             panel2.Controls.Add(newg);
-            newg.Height = 3*size/2;
-            newg.Width = 3*size/2;
-            newg.Text = "New game:\n"+ (whitePlayer_AI ? "AI" + intelWhite.ToString() : "Player") + "\n vs \n"+(blackPlayer_AI? "AI"+intelBlack.ToString():"Player");
+            newg.Height = 3 * size / 2;
+            newg.Width = 3 * size / 2;
+            newg.Text = "New game:\n" + (whitePlayer_AI ? "AI" + intelWhite.ToString() : "Player") + "\n vs \n" + (blackPlayer_AI ? "AI" + intelBlack.ToString() : "Player");
             newg.Location = new Point(size * 0, size * 4);
             newg.Click += NewGame_Click;
 
             //AI diff for white
             panel2.Controls.Add(aiw);
-            aiw.Height = size/2;
-            aiw.Width = size/2;
-            aiw.Text = "AI"+intelWhite.ToString();
+            aiw.Height = size / 2;
+            aiw.Width = size / 2;
+            aiw.Text = "AI" + intelWhite.ToString();
             aiw.Location = new Point(size * 0, size * 3);
             aiw.Tag = 0;
             aiw.Click += AISet_Click;
@@ -266,7 +261,7 @@ namespace Sachy_Obrazky
                 panel3.Controls.Add(proms[i]);
                 proms[i].Height = size;
                 proms[i].Width = size;
-                proms[i].Location = new Point(size*(i),0);
+                proms[i].Location = new Point(size * (i), 0);
                 proms[i].Hide();
                 proms[i].Enabled = false;
                 proms[i].Tag = i;
@@ -285,20 +280,15 @@ namespace Sachy_Obrazky
         {
             ButtonBoard[target].BackColor = clicked_opponent;
             promot = -2;
-            for(int i = 0; i < 4; ++i)
+            for (int i = 0; i < 4; ++i)
             {
-                ImagePrint(proms[i], (white?5:11)-i);
+                ImagePrint(proms[i], (white ? 5 : 11) - i);
                 proms[i].Show();
                 proms[i].Enabled = true;
             }
         }
 
-        
 
-        /*protected override void OnPaintBackground(PaintEventArgs e)
-        {
-            //empty implementation
-        }*/
 
         public static Image resizeImage(Image imgToResize, Size size)
         {
@@ -335,25 +325,25 @@ namespace Sachy_Obrazky
         static int result = 0;
 
 
-        bool whitePlayer_AI = true;
+        bool whitePlayer_AI = false;
         bool blackPlayer_AI = true;
 
-        int intelWhite = 2;
-        int intelBlack = 2;
-        int intelAI = 2;
+        int intelWhite = 4;
+        int intelBlack = 4;
+        int intelAI = 4;
 
 
         public int GoNextMove(Engine enj) //move made by computer
         {
-            
+
             moveMade = false;
-            int mov = enj.ComputersMove(white,gamelength, white?intelWhite:intelBlack);
+            int mov = enj.ComputersMove(white, gamelength, white ? intelWhite : intelBlack);
             string textforbox = enj.analysisEvaluation.ToString() + " ";
-            for(int i = 0; i < enj.pvmoves.Length; ++i)
+            for (int i = 0; i < enj.pvmoves.Length; ++i)
             {
                 if (enj.pvmoves[i] == "Ka8-a8")
                     break;
-                textforbox += enj.pvmoves[i] + " "; 
+                textforbox += enj.pvmoves[i] + " ";
             }
             Analys.Text = textforbox;
             //int x = enj.PlayersMove(white, gamelength, 0);
@@ -382,15 +372,23 @@ namespace Sachy_Obrazky
             {
                 Finish();
             }
+            else if (enj.IsCheck_White() || enj.IsCheck_Black())
+            {
+                ShowCheck();
+            }
+            else
+            {
+                UnshowCheck();
+            }
             moveMade = true;
             return result;
         }
 
         void HighlightMove(int move)
         { //only highlights the "from" and "to" squares
-            int from = (move>>16) & 255;
+            int from = (move >> 16) & 255;
             int to = (move >> 8) & 255;
-            if(from == to)
+            if (from == to)
             { //castling - it is called on previous move, so white is the opposite...
                 from = white ? 4 : 60;
                 if (Engine.Bit(move, 5)) //qside
@@ -420,7 +418,7 @@ namespace Sachy_Obrazky
             //if the same piece h.b. already clicked, return the buttons back to normal;
             ulong moveBitboard;
 
-            if(promot!=-1)
+            if (promot != -1)
             {
                 return;
             }
@@ -437,14 +435,14 @@ namespace Sachy_Obrazky
             else if (ButtonBoard[idx].BackColor == allowed)
             { //target square of current piece
                 targetSquare = idx;
-                if(selectedPiece == 1 && 0 <= idx && idx < 8) //promotion - make a choice for white
+                if (selectedPiece == 1 && 0 <= idx && idx < 8) //promotion - make a choice for white
                 {
-                    ShowPromotion(idx,true);
+                    ShowPromotion(idx, true);
                     return;
                 }
                 else if (selectedPiece == 7 && 58 <= idx && idx < 64) //promotion - make a choice for black
                 {
-                    ShowPromotion(idx,false);
+                    ShowPromotion(idx, false);
                     return;
                 }
                 uint nextmove = enj.CompleteMove(selectedPiece, selectedSquare, idx, white);
@@ -479,7 +477,7 @@ namespace Sachy_Obrazky
                     }
                     pointr <<= 1;
                 }
-            
+
             }
         }
 
@@ -510,20 +508,20 @@ namespace Sachy_Obrazky
                         new Point((8 - i) * size, size * 8);
                 }
             }
-            
+
             else
             {
                 for (int i = 0; i < 64; ++i)
                 {
-                    ButtonBoard[i].Location = 
+                    ButtonBoard[i].Location =
                         new Point(panel1.Width / 9 + (i & 0b111) * size, (i >> 3) * size);
                 }
                 for (int i = 0; i < 8; ++i)
                 {
-                    rankCoords[i].Location = 
+                    rankCoords[i].Location =
                         new Point(panel1.Width / 9 - rankCoords[i].Width,
                         i * size + (size - rankCoords[i].Height) / 2);
-                    fileCoords[i].Location = 
+                    fileCoords[i].Location =
                         new Point((1 + i) * size, size * 8);
                 }
             }
@@ -543,7 +541,7 @@ namespace Sachy_Obrazky
         }
         void Save_Click(object sender, EventArgs e)
         {
-            Engine.RewritePartia("partie.txt");
+            Engine.RewritePartia("partie.txt", SaveName.Text);
             return;
         }
 
@@ -566,7 +564,7 @@ namespace Sachy_Obrazky
             targetSquare = -1;
             promot = -1;
 
-            foreach(var p in proms)
+            foreach (var p in proms)
             {
                 p.Enabled = false;
                 p.Hide();
@@ -597,7 +595,7 @@ namespace Sachy_Obrazky
         void AISet_Click(object sender, EventArgs e)
         {
             Button b = (Button)sender;
-            if((int)b.Tag == 0)
+            if ((int)b.Tag == 0)
             {
                 whitePlayer_AI = true;
                 intelWhite = intelAI;
@@ -607,16 +605,16 @@ namespace Sachy_Obrazky
                 blackPlayer_AI = true;
                 intelBlack = intelAI;
             }
-            newg.Text = "New game:\n" + 
+            newg.Text = "New game:\n" +
                 (whitePlayer_AI ? "AI" + intelWhite.ToString() : "Player")
-                + "\n vs \n" + 
+                + "\n vs \n" +
                 (blackPlayer_AI ? "AI" + intelBlack.ToString() : "Player");
         }
 
         void AsPlayer_Click(object sender, EventArgs e)
         {
-            Button b = (Button) sender;
-            if((int)b.Tag == 0)
+            Button b = (Button)sender;
+            if ((int)b.Tag == 0)
             {
                 whitePlayer_AI = false;
             }
@@ -644,7 +642,7 @@ namespace Sachy_Obrazky
             result = 0;
             KonecHry.Hide();
             KonecHry.Text = "";
-            foreach(var b in ButtonBoard)
+            foreach (var b in ButtonBoard)
             {
                 b.Enabled = true;
             }
@@ -657,7 +655,7 @@ namespace Sachy_Obrazky
             {
                 moveMade = false;
             }
-            
+
         }
         /*protected override CreateParams CreateParams
         {
@@ -675,9 +673,9 @@ namespace Sachy_Obrazky
             int height = (int)(b.Height * ScaleRatio);
 
             Bitmap originImage = ImagesPieces[piece]; //new Bitmap(Application.StartupPath + "\\Image\\" + PieceImages[piece]);
-            originImage.MakeTransparent(Color.FromArgb(247,247,247));
+            originImage.MakeTransparent(Color.FromArgb(247, 247, 247));
             Image image = resizeImage(originImage, new Size(height, width));
-            
+
             b.Image = image;
 
 
@@ -686,12 +684,12 @@ namespace Sachy_Obrazky
             // Give the button a flat appearance.
             b.FlatStyle = FlatStyle.Flat;*/
         }
-        
-        
+
+
         public void PrintPic(ulong[] bitboards)
         { //same as the Printout in engine function, but changes the names of buttons
             int n = -1;
-            foreach(Button btn in ButtonBoard) //hope they are ordered in the same way
+            foreach (Button btn in ButtonBoard) //hope they are ordered in the same way
             {
                 ++n;
                 char piece = ' ';
@@ -703,9 +701,9 @@ namespace Sachy_Obrazky
                 {
                     ButtonBoard[n].BackColor = dark;
                 }
-                   
+
                 //if occupied, write something here...
-                for ( int k = 0; k < bitboards.Length; ++k)
+                for (int k = 0; k < bitboards.Length; ++k)
                 {
                     ButtonBoard[n].Text = "";
                     if (Engine.Bit(bitboards[k], n))
@@ -717,7 +715,7 @@ namespace Sachy_Obrazky
                         //ButtonBoard[n].BringToFront();
                         break;
                     }
-                    
+
                     //ButtonBoard[n].BackColor = SystemColors.Control;
                 }
                 if (piece == ' ')
@@ -769,12 +767,14 @@ namespace Sachy_Obrazky
         private void timer1_Tick(object sender, EventArgs e) //tick time = 10
         {
             //if the last time ran is less than x seconds ago, skip the tick.
-            if (moveMade is false || lastTimeRan > (System.DateTime.Now.Ticks - MinimalMoveDelay*10000)|| !continuing)
+            if (moveMade is false || lastTimeRan > (System.DateTime.Now.Ticks - MinimalMoveDelay * 10000) || !continuing)
             {
                 return;
             }
-            if (white && whitePlayer_AI || (white is false && blackPlayer_AI)) 
+            if (white && whitePlayer_AI || (white is false && blackPlayer_AI))
             {
+                if((gamelength+1) % (AutoSaveFreq*2) == 0)
+                    Engine.RewritePartia("partie.txt", SaveName.Text);
                 result = GoNextMove(enj);
             }
             else
@@ -782,12 +782,29 @@ namespace Sachy_Obrazky
                 return;
             }
             lastTimeRan = System.DateTime.Now.Ticks;
-            
+
             //continuing = PlayGame(enj) == 0;
             if (result != 0)
             {
+                Engine.RewritePartia("partie.txt", SaveName.Text);
                 Finish();
             }
+        }
+
+        private void ShowCheck()
+        {
+            timer1.Stop();
+            KonecHry.Text = "Check!";
+            Controls.Add(KonecHry);
+            KonecHry.Show();
+            KonecHry.BringToFront();
+            timer1.Start();
+        }
+        private void UnshowCheck()
+        {
+            KonecHry.Text = "";
+            Controls.Add(KonecHry);
+            KonecHry.Hide();
         }
         private void Finish()
         {
@@ -807,6 +824,11 @@ namespace Sachy_Obrazky
 
         }
         private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void panel1_Paint(object sender, PaintEventArgs e)
         {
 
         }

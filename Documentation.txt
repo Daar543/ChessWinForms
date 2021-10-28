@@ -1,7 +1,142 @@
 This project has been made to allow players play chess against AI, and against each other, or AI against AI.
 The project consists mostly of two parts: the Form, which is necessary for Winforms apps, and the class "Engine" - which was originally made for console chess application.
 
-I. Engine
+
+I. Code organization
+
+1) What does the chess engine need
+
+All the features needed to implement a back-end of chess engine are these:
+
+- Start of game: Where to place pieces, how strong will the engine be, how will it react to user input
+- Game rules: How can the piece move, when they cannot move, when game ends 
+- State of position: Where each piece is residing, which player is currently supposed to move, other hidden characteristic of position (e.g. castling rights)
+- Calculation and static evaluation: How will the computer analyze series of best moves, which moves will lead to the best outcome, and what is meant by "the best outcome".
+- Saving of game: How to write and interpret notation
+
+2) Format of variables
+
+The chess code needs to be very fast, therefore I have given up on my first approach, which involved splitting the functions and objects into classes.
+
+Instead, many "objects" are incoded in 4B or 8B integers. This improves the speed, but can cause complications with reading code.
+
+Many functions therefore rely on excessive usage of bit-shift operations. For this reason, one of the most used functions is function Bit - 
+	which simply checks if the bit is set on a given position.
+	
+Most of the code is therefore driven by these 3 variables: Move, Position and bitboards (in general):
+
+a) Move 
+	Incodes a move in these 4 bytes (MSB first):
+	- ID of a piece which was captured (4b), ID of a piece which has moved (4b)
+	- ID of a square this piece has moved from
+	- ID of a square this piece has moved to
+	- Other flags of a move, e.g. if the move is a pawn promoti0n.
+	
+	In some cases, a null value will correspond to a zero value. Luckily, this issue can be sometimes easily eliminated - e.g. a white king has id of 0, 
+	but that piece can never be captured...
+
+b) Position
+	This 4B integer contains all information of the position, which are not deducible from the board state of pieces, such as which side is currently to move.
+	
+c) Bitboard(s)
+	In general, a bitb0ard is a 8B integer where one bit corresponds to one square of a board, as board has exactly 64 squares. 
+	Therefore, every bitboard can encode one piece of boolean information for each square.
+	The most common type of information is: "Is there a white king / white pawn / white knight ... " on this square? This means that an array of 12 bitboards (named as BitBoards)
+	is enough to encode the whole state of all pieces.
+	
+	A union of these bitboards can be used to determine if there is a any white/black piece, or any piece in general - this improves the speed of move generation.
+	
+	Used Bitboards:
+	
+	BitBoards[0]...BitBoards[11]: Is a piece with this ID (0 - white king ... 11 - black queen) on the square?
+	Wmask, Bmask, Block: Is there a white/black/any piece on this square?
+	moves: Can a piece move on this square?
+	
+Appropriate bit operations are needed to deal with all variables.
+
+3) Start of game
+
+When starting a new game, the engine needs to load the starting position. The starting position is kept in a pseudo-FEN string. This string is parsed and the STATE OF POSITION 
+(e.g. positions of pieces) are saved into class variables. After that, all is left to the form application - it will handle following inputs.
+
+Functions used: Initialize (wrapper), FenToStr, TightFenToChar (decode FEN string), CreateBBoards(transforms array of chars - pieces - into corresponding bitboards)
+
+4) Game rules
+
+a) Moves of pieces 
+
+If a player is to move, the program will scan the whole board and determine pseudo-legal moves for all pieces of given color (if an AI plays) 
+or all pseudo-legal moves of selected piece (if a human plays). The function MoveGeneration_White, for example, will find a king of the given square, and will then call function 
+MovesKing. This function uses a lookup table for all squares where king can move from, and returns appropriate bitboard - a 64-bit integer where every set bit
+corresponds to a square where the king can move. After that, a function Bit - which searches if a bit is set on the given position is called, and if the bit is actually set,
+a move is generated - from the square where king stands, to the square which is currently inspected.
+
+Some special moves, such as castling, are unsuitable for this piece-centric approach, and are generated separately.
+
+Functions used: MoveGeneration_Black, MoveGeneration_White (general move generation for the whole board), King_Moves, Knight_Moves ... (moves for a specific piece).
+
+b) Move legality
+
+Since king has "royal" value, an opponent must not have a chance to take it. Therefore, some moves which coould be normally made, are impossible (illegal). 
+This is always tested retroactively. First a move is made, and then is checked if a king is not under attack. 
+
+For the checking 0f attack, move as every piece is generated from the king's location, and is checked whether the moves don't collide with piece of the opposite color. 
+E.g. if a king was a rook and could take the rook at the square, it means the king is under attack of the rook.
+
+Functions used: Attacked (checks if a square is under attack)
+
+c) Game end:
+
+If there is no legal move, the game ends in a mate or stalemate. This is resolved in the analysis functions - if every move is illegal, no move is chosen by the computer, 
+and therefore it jumps to conclusion the game is ending.
+
+Another way for the game to end is if there is no sufficient material (in order to give mate), or that the game has been going for 50 moves without capture or pawn move. 
+In this case, the game is always drawn.
+
+Functions used: MakeMove, UndoMove, (makes or unmakes moves, changing the move counter), InsufMaterial (checks if a mate is possible with this material), 
+NoProgress (50 moves rule), EndMate (ends game with mate or stalemate)
+
+5) Calculation and static evaluation
+
+The evaluation consists of three phases: The first one is classic alpha-beta evaluation. The second one is quiescence search, where - if a maximum depth is reached
+by alpha-beta evaluation - series of exchanges are evaluated until a moment, where player to move has no legal captures. The third one is static evaluation,
+which is mostly based on material + squares where pieces are standing + small randomness factor. This one evaluates all positions during quiescence search or at the end of it. 
+After that, the evaluation propagates back to the alpha-beta function.
+
+The alpha-beta function also picks up series of best moves, called "principal variation".
+
+Functions used: Evaluation (evaluates position), LazyEvaluation (simpler function, only for material calculation purposes), EndMateEval(evaluation of mate/stalemate positions),
+NoProgress, InsufMaterial (draw state evaluations), AlphaBeta, Quisce (DFS searches).
+
+6) Game saving
+
+After a move is made, it is decoded from its integer format to a human-readable format and added to the notation of current game. 
+It is not a real PGN notation, but would be accepted on human player's score sheet.
+In addition, to the notation also a computer's evaluation (as a comment) is added.
+If the notation is saved by a player, it will be furtherly decoded and saved into file "prepsana.txt"
+and this format is accepted by some PGN converter sites, allowing user to fully convert the game.
+
+Functions used: ComputersMove, PlayersMove (makes move, recorded by notation), RewritePartia (rewrites and saves notation)
+
+7) Game flow
+
+To sum, how the game goes - assume AI vs AI case (in the case of human playing, the program will wait until player makes a move, then behaves similarly):
+
+a) Board initializes: Position, BitBoards change appropriately, Notation gets initialized
+
+b) Computer thinks: Sets its depth - partially influenced by user, partially based on current situation
+
+c) Computer evaluates: Generates all moves from current position, makes every single one on the board,analyzes it further, then retracts it and continues 
+(This does not show to the user). 
+
+d) Computer decides move: During the alphabeta search, the "best" variation has been generated; Computer picks up the first move of the variation and plays it. 
+
+e) Computer plays move: All the bitboard and positional variables which needed to be changed will change, an extra move is added to the notation, 
+	and the done move shows in form as well.
+
+f) Computer/Human has no legal move or the game is drawn: An engine evaluates if the position is mate or drawn and concludes the game with appropriate result.
+
+II. Engine
 
 
 1) Purpose
@@ -595,7 +730,7 @@ d) ulong HashPosition(ulong[] rgn)
 
 Scans each bitboard and Position integer, returns a Zobrist hash of these factors (See 2A/e).
 
-II. Form
+III. Form
 
 1) Purpose
 
@@ -656,8 +791,8 @@ The button also shows which player perspective are we watching (white means that
 
 d) Save notation button
 
-The current game is temporarily saved in a file "partie.txt".
-Clicking this button will rewrite the notation into a file "prepsana.txt" in a changed format. Such format was accepted
+The current game is temporarily saved in a file "bin/Release/partie.txt".
+Clicking this button will rewrite the notation into a file "bin/Release/prepsana.txt" in a changed format. Such format was accepted
 by page http://www.caissa.com/chess-tools/pgn-editor.php .
 By copying notation into the page (select "Insert PGN file") you can get full PGN format.
 

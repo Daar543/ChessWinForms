@@ -18,3 +18,13 @@ C:\Users\Frantisek\source\repos\Sachy_Obrazky\Sachy_Obrazky\obj\Debug\Sachy_Obra
 C:\Users\Frantisek\source\repos\Sachy_Obrazky\Sachy_Obrazky\obj\Debug\Sachy_Obrazky.csproj.CoreCompileInputs.cache
 C:\Users\Frantisek\source\repos\Sachy_Obrazky\Sachy_Obrazky\obj\Debug\Sachy_Obrazky.exe
 C:\Users\Frantisek\source\repos\Sachy_Obrazky\Sachy_Obrazky\obj\Debug\Sachy_Obrazky.pdb
+C:\Users\Francimor\source\repos\Sachy_Obrazky\bin\Debug\Sachy_Obrazky.exe.config
+C:\Users\Francimor\source\repos\Sachy_Obrazky\bin\Debug\Sachy_Obrazky.exe
+C:\Users\Francimor\source\repos\Sachy_Obrazky\bin\Debug\Sachy_Obrazky.pdb
+C:\Users\Francimor\source\repos\Sachy_Obrazky\obj\Debug\Sachy_Obrazky.csprojAssemblyReference.cache
+C:\Users\Francimor\source\repos\Sachy_Obrazky\obj\Debug\Sachy_Obrazky.Form1.resources
+C:\Users\Francimor\source\repos\Sachy_Obrazky\obj\Debug\Sachy_Obrazky.Properties.Resources.resources
+C:\Users\Francimor\source\repos\Sachy_Obrazky\obj\Debug\Sachy_Obrazky.csproj.GenerateResource.cache
+C:\Users\Francimor\source\repos\Sachy_Obrazky\obj\Debug\Sachy_Obrazky.csproj.CoreCompileInputs.cache
+C:\Users\Francimor\source\repos\Sachy_Obrazky\obj\Debug\Sachy_Obrazky.exe
+C:\Users\Francimor\source\repos\Sachy_Obrazky\obj\Debug\Sachy_Obrazky.pdb

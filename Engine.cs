@@ -10,6 +10,7 @@
     using System.Linq;
     using System.Collections;
     using System.Runtime.InteropServices;
+    using System.Text;
 
     public partial class Engine
     {
@@ -263,6 +264,28 @@
         const int
             hash_side = 772,
             hash_castling = 768;
+
+        public string BBsToPosition()
+        {
+            StringBuilder result = new StringBuilder();
+            for(int i = 0; i<12; ++i)
+            {
+                var bb = BitBoards[i];
+                if(bb > 0)
+                {
+                    ulong idx = 1;
+                    for(int j = 0; j<64;++j)
+                    {
+                        if((bb&idx) != 0)
+                        {
+                            result.Append($"{pieces[i]}{Squares[j]} ");
+                        }
+                        idx <<= 1;
+                    }
+                }
+            }
+            return result.ToString();
+        }
 
 
         static int HammingWeight(ulong x)
@@ -2372,7 +2395,7 @@
             }
         }
 
-        public static int AlphaBeta_Rewritten(int currdepth, int maxdepth, int alpha, int beta, bool white, uint[] pline, int evaluation_random)
+        public int AlphaBeta_Rewritten(int currdepth, int maxdepth, int alpha, int beta, bool white, uint[] pline, int evaluation_random, bool smart)
         {
             NodesSearched += 1;
             int AlphaOrig = alpha;
@@ -2383,7 +2406,7 @@
 
             if (currdepth >= maxdepth) //or end...
             {
-                return Quisce(alpha, beta, white, evaluation_random);
+                return Quisce(alpha, beta, white, evaluation_random, smart);
                 //return Evaluation();
             }
 
@@ -2436,24 +2459,27 @@
             
             if (currdepth >= maxdepth) //or end...
             {
-                return Quisce(alpha, beta, white, evaluation_random);
-                //return Evaluation();
+                return Quisce(alpha, beta, white, evaluation_random, smart);
             }
             uint[] mvs = white ? MoveGeneration_White(BitBoards).ToArray() : MoveGeneration_Black(BitBoards).ToArray();
             Shuffle(mvs);
             SortMoves(mvs);
             uint currentBest = 0;
-            for (int i = 0; i < mvs.Length; ++i)
+            if(entry != null && entry.depth > currdepth && (entry.flag == 2 || entry.flag == 1) )
             {
-                if (entry != null && entry.depth > currdepth && (entry.flag == 2 || entry.flag == 1) && mvs[i] == entry.move)
+                for (int i = 0; i < mvs.Length; ++i)
                 {
-                    uint temp = mvs[i];
-                    mvs[i] = mvs[0];
-                    mvs[0] = temp;
-                    //replaces with best move
-                    break;
+                    if (mvs[i] == entry.move)
+                    {
+                        uint temp = mvs[i];
+                        mvs[i] = mvs[0];
+                        mvs[0] = temp;
+                        //replaces with best move
+                        break;
+                    }
                 }
             }
+            
             uint donemove;
             int BestValue = int.MinValue + 10;
             foreach (uint move in mvs)
@@ -2485,7 +2511,7 @@
                 }
                 else
                 {
-                    curreval = -AlphaBeta_Rewritten(currdepth + 1, maxdepth, -beta, -alpha, !white, line, evaluation_random);
+                    curreval = -AlphaBeta_Rewritten(currdepth + 1, maxdepth, -beta, -alpha, !white, line, evaluation_random, smart);
                 }
 
                 UndoMove(mvm, white);
@@ -3057,7 +3083,7 @@
         static long NodesSearched;
         static long TimeSpent;
 
-        public static void Play(bool white)
+        public void Play(bool white)
         {
 
             uint mov = 0;
@@ -3115,7 +3141,7 @@
                 }*/
                 int ab = 0;
                 end = true;
-                uint[] principalVariation = new uint[deph + (player ? 0 : -1)];
+                uint[] principalVariation = new uint[deph];
                 for (int k = 0; k < TranspoTable.Length; ++k)
                 {
                     TranspoTable[k] = new Dictionary<ulong, Hashentry>();
@@ -3128,7 +3154,7 @@
                     swplay.Start();
 
                     // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, false); //no random
-                    ab = AlphaBeta_Rewritten(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, 20); //both random
+                    ab = AlphaBeta_Rewritten(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, 20, !white); //both random
                                                                                                                                                    // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? true : false); //white random
                                                                                                                                                    // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? false : true); //black random
 
@@ -3390,7 +3416,7 @@
                 // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? true : false); //white random
                 // ab = AlphaBeta(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player ? false : true); //black random
 
-                ab = AlphaBeta_Rewritten(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player?30:30);
+                ab = AlphaBeta_Rewritten(0, deph, int.MinValue + 10, int.MaxValue - 10, player, principalVariation, player?30:30, !white);
                 analysisEvaluation = ab;
                 // swplay.Stop();
                 //TimeSpent = swplay.ElapsedMilliseconds;
@@ -3474,7 +3500,7 @@
             }
 
             Notation += DecodeMove((int)mov) + " ";
-            Notation += "{" + Evaluation().ToString() + "} ";
+            Notation += $"{{{ab}}} ";
 
             var swr = new StreamWriter("partie.txt", false);
             swr.Write(Notation);
@@ -3777,7 +3803,7 @@
             }
         }
 
-        public static int AlphaBeta(int currdepth, int maxdepth, int alpha, int beta, bool white, uint[] pline, int evaluation_random)
+        public int AlphaBeta(int currdepth, int maxdepth, int alpha, int beta, bool white, uint[] pline, int evaluation_random, bool smart)
         {
 
             //var ss = new Stopwatch();
@@ -3789,7 +3815,7 @@
             if (currdepth >= maxdepth)
             {
                 NodesSearched += 1;
-                int ira = Quisce(int.MinValue + 10, int.MaxValue - 10, white, evaluation_random);
+                int ira = Quisce(int.MinValue + 10, int.MaxValue - 10, white, evaluation_random, smart);
 
                 /*ss.Stop();
                 Console.WriteLine("{0}. {1}", NodesSearched, ss.Elapsed);
@@ -3832,7 +3858,7 @@
                 }
                 end = false;
 
-                curreval = -AlphaBeta(currdepth + 1, maxdepth, -beta, -alpha, !white, line, evaluation_random);
+                curreval = -AlphaBeta(currdepth + 1, maxdepth, -beta, -alpha, !white, line, evaluation_random, !white);
 
                 //returns back
                 UndoMove(mvm, white);
@@ -3886,47 +3912,58 @@
             return alpha;
         }
 
-        static int Quisce(int alpha, int beta, bool white, int evaluation_random) 
+        int Quisce(int alpha, int beta, bool white, int evaluation_random, bool smart) 
         {
-            int staticEval;
-            if (InsufMaterial())
+            uint[] mvs;
+            bool end;
+            if (smart && white && IsCheck_White())
             {
-                staticEval = 0;
+                mvs = MoveGeneration_White(BitBoards).ToArray();
+                end = true;
+            }
+            else if (smart && !white && IsCheck_Black())
+            {
+                mvs = MoveGeneration_Black(BitBoards).ToArray();
+                end = true;
             }
             else
             {
-                staticEval =
-                Evaluation() + los.Next(-evaluation_random, +evaluation_random + 1);
+                mvs = white ? CapsGeneration_White(BitBoards).ToArray() : CapsGeneration_Black(BitBoards).ToArray();
+                end = false;
+                int staticEval;
+                if (InsufMaterial())
+                {
+                    staticEval = 0;
+                }
+                else
+                {
+                    staticEval =
+                    Evaluation() + los.Next(-evaluation_random, +evaluation_random + 1);
 
-                staticEval *= (white ? 1 : -1);
+                    staticEval *= (white ? 1 : -1);
+                }
+                if (alpha < staticEval)
+                {
+                    alpha = staticEval;
+                }
+                //if there is no good capture, consider the score of position good as it is
+                if (alpha >= beta)
+                {
+                    return staticEval;
+                }
             }
-            if (alpha < staticEval)
-            {
-                alpha = staticEval;
-            }
-            //if there is no good capture, consider the score of position good as it is
-            if (alpha >= beta)
-            {
-                return staticEval;
-            }
-                
             
-            uint[] mvs = white ? CapsGeneration_White(BitBoards).ToArray() : CapsGeneration_Black(BitBoards).ToArray();
-
-            int curreval;
+            int curreval = int.MinValue+10;
             if (mvs.Length > 1)
             {
-
-                //Shuffle(mvs);
+                Shuffle(mvs);
                 //give some ordering to the moves later, based on capturing and captured
                 SortMoves(mvs);
                 //make the moves as they appear in captures, same as in alphabeta
-
             }
             //NodesSearched += 1;
             for (int i = 0; i < mvs.Length; ++i)
             {
-
                 //int checkito = Evaluation();
                 uint donemove = mvs[i];
                 uint[] mvm = MakeMove(donemove, white);
@@ -3948,23 +3985,10 @@
                     }*/
                     continue;
                 }
+                end = false;
 
-
-                curreval = -Quisce(-beta, -alpha, !white, evaluation_random);
+                curreval = -Quisce(-beta, -alpha, !white, evaluation_random, smart);
                 UndoMove(mvm, white);
-
-
-                /*int ev1 = Evaluation();
-                if (checkito != ev1)
-                {
-                    Console.WriteLine("Error in retracting");
-                    Console.ReadLine();
-                    Printout(BitBoards);
-                    mvm = MakeMove(donemove, white);
-                    Printout(BitBoards);
-                    UndoMove(mvm, white);
-                    Printout(BitBoards);
-                }*/
 
                 if (curreval >= beta)
                 {
@@ -3974,6 +3998,19 @@
                 {
                     alpha = curreval;
                 }
+            }
+
+            if (end)
+            {
+                curreval = -EndMateEval(white, 10);
+            }
+            if (curreval >= beta)
+            {
+                return beta;
+            }
+            if (curreval > alpha)
+            {
+                alpha = curreval;
             }
 
             return alpha;
